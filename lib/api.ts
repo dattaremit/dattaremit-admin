@@ -1,17 +1,19 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
-let authToken: string | null = null;
+let getAuthToken: (() => Promise<string | null>) | null = null;
 
-export function setAuthToken(token: string) {
-  authToken = token;
+export function setTokenGetter(getter: () => Promise<string | null>) {
+  getAuthToken = getter;
 }
 
 async function adminFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const token = getAuthToken ? await getAuthToken() : null;
+
   const res = await fetch(`${API_BASE_URL}/admin${endpoint}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(authToken ? { "x-auth-token": authToken } : {}),
+      ...(token ? { "x-auth-token": token } : {}),
       ...options?.headers,
     },
   });

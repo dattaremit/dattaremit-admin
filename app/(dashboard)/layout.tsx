@@ -14,7 +14,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
-import { setAuthToken, api } from "@/lib/api";
+import { setTokenGetter, api } from "@/lib/api";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ShieldX, LogOut } from "lucide-react";
@@ -33,14 +33,10 @@ export default function DashboardLayout({
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
 
+    setTokenGetter(() => getToken());
+
     async function verifyAdmin() {
       try {
-        const token = await getToken();
-        if (!token) {
-          setIsAdmin(false);
-          return;
-        }
-        setAuthToken(token);
         await api.getDashboardStats();
         setIsAdmin(true);
       } catch (error) {
