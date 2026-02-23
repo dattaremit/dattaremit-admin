@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { useClerk, useUser } from "@clerk/nextjs";
 import {
@@ -42,9 +43,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-            DR
-          </div>
+          <Image src="/logo.png" alt="DattaRemit" width={32} height={32} />
           <div>
             <p className="text-sm font-semibold">DattaRemit</p>
             <p className="text-xs text-muted-foreground">Admin Panel</p>

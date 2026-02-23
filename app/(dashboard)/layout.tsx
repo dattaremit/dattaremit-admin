@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { setAuthToken, api } from "@/lib/api";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ShieldX, LogOut } from "lucide-react";
 
@@ -63,8 +64,9 @@ export default function DashboardLayout({
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="flex flex-col items-center text-center space-y-6 max-w-md">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-            <ShieldX className="h-8 w-8 text-destructive" />
+          <Image src="/logo.png" alt="DattaRemit" width={56} height={56} priority />
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+            <ShieldX className="h-7 w-7 text-destructive" />
           </div>
           <div className="space-y-2">
             <h1 className="text-2xl font-bold">Access Denied</h1>
