@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -17,7 +17,7 @@ import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 import { setTokenGetter, api } from "@/lib/api";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ShieldX, LogOut } from "lucide-react";
+import { ShieldX, LogOut, WifiOff } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -29,24 +29,43 @@ export default function DashboardLayout({
   const { user } = useUser();
   const breadcrumbs = useBreadcrumbs();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
 
-    setTokenGetter(() => getToken());
+    setTokenGetter(() => getTokenRef.current());
+
+    let cancelled = false;
 
     async function verifyAdmin() {
       try {
+        const token = await getTokenRef.current();
+        if (!token) {
+          console.error("Admin verification failed: No auth token received from Clerk");
+          if (!cancelled) {
+            setAuthError("No auth token received. Please sign out and sign in again.");
+            setIsAdmin(false);
+          }
+          return;
+        }
         await api.getDashboardStats();
-        setIsAdmin(true);
+        if (!cancelled) setIsAdmin(true);
       } catch (error) {
         console.error("Admin verification failed:", error);
-        setIsAdmin(false);
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : "Unknown error";
+          setAuthError(message);
+          setIsAdmin(false);
+        }
       }
     }
 
     verifyAdmin();
-  }, [isLoaded, isSignedIn, getToken]);
+    return () => { cancelled = true; };
+  }, [isLoaded, isSignedIn]);
 
   if (!isLoaded || isAdmin === null) {
     return (
@@ -57,33 +76,58 @@ export default function DashboardLayout({
   }
 
   if (!isAdmin) {
+    const isAuthError = authError === "Unauthorized" || authError === "Forbidden";
+    const isTokenError = authError?.startsWith("No auth token");
+    const isNetworkError = authError && !isAuthError && !isTokenError;
+
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="flex flex-col items-center text-center space-y-6 max-w-md">
           <Image src="/logo.png" alt="DattaRemit" width={56} height={56} priority />
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
-            <ShieldX className="h-7 w-7 text-destructive" />
+            {isNetworkError ? (
+              <WifiOff className="h-7 w-7 text-destructive" />
+            ) : (
+              <ShieldX className="h-7 w-7 text-destructive" />
+            )}
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold">Access Denied</h1>
+            <h1 className="text-2xl font-bold">
+              {isNetworkError ? "Connection Error" : "Access Denied"}
+            </h1>
             <p className="text-muted-foreground">
-              Sorry{user?.firstName ? `, ${user.firstName}` : ""}. Your account does not have admin
-              privileges. If you believe this is a mistake, please contact an
-              administrator to request access.
+              {isNetworkError
+                ? "Unable to reach the server. Please check your internet connection and try again."
+                : `Sorry${user?.firstName ? `, ${user.firstName}` : ""}. Your account does not have admin privileges. If you believe this is a mistake, please contact an administrator to request access.`}
             </p>
+            {authError && !isNetworkError && (
+              <p className="text-xs text-destructive mt-2">
+                Error: {authError}
+              </p>
+            )}
           </div>
           {user?.primaryEmailAddress && (
             <p className="text-sm text-muted-foreground">
               Signed in as <span className="font-medium text-foreground">{user.primaryEmailAddress.emailAddress}</span>
             </p>
           )}
-          <Button
-            variant="outline"
-            onClick={() => signOut({ redirectUrl: "/sign-in" })}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
+          <div className="flex gap-3">
+            {isNetworkError && (
+              <Button
+                variant="default"
+                onClick={() => window.location.reload()}
+              >
+                Try again
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => signOut({ redirectUrl: "/sign-in" })}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </Button>
+          </div>
         </div>
       </div>
     );

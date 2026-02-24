@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Gift, Users, TrendingUp, Trophy } from "lucide-react";
 import {
@@ -14,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -31,33 +29,32 @@ import {
 } from "@/components/ui/chart";
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
 import { api, type ReferralStats, type DashboardStats } from "@/lib/api";
+import { useApiFetch } from "@/hooks/use-api-fetch";
+import { StatsCard } from "@/components/stats-card";
+import { ErrorState } from "@/components/error-state";
+
+interface ReferralData {
+  referralStats: ReferralStats;
+  dashStats: DashboardStats;
+}
 
 const referralChartConfig = {
   referralCount: { label: "Referrals", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 
 export default function ReferralsPage() {
-  const [referralStats, setReferralStats] = useState<ReferralStats | null>(null);
-  const [dashStats, setDashStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [refRes, statsRes] = await Promise.all([
-          api.getReferralStats(),
-          api.getDashboardStats(),
-        ]);
-        setReferralStats(refRes.data);
-        setDashStats(statsRes.data);
-      } catch (err) {
-        console.error("Failed to fetch referral data:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
+  const { data, loading, error, refetch } = useApiFetch<ReferralData>(
+    async () => {
+      const [refRes, statsRes] = await Promise.all([
+        api.getReferralStats(),
+        api.getDashboardStats(),
+      ]);
+      return {
+        referralStats: refRes.data,
+        dashStats: statsRes.data,
+      };
+    },
+  );
 
   if (loading) {
     return (
@@ -76,8 +73,12 @@ export default function ReferralsPage() {
     );
   }
 
-  const totalUsers = dashStats?.totalUsers ?? 0;
-  const totalReferrals = referralStats?.totalReferrals ?? 0;
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
+  if (!data) return null;
+
+  const { referralStats, dashStats } = data;
+  const totalUsers = dashStats.totalUsers;
+  const totalReferrals = referralStats.totalReferrals;
   const referralRate = totalUsers > 0 ? Math.round((totalReferrals / totalUsers) * 100) : 0;
 
   return (
@@ -91,57 +92,30 @@ export default function ReferralsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Referrals
-            </CardTitle>
-            <Gift className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalReferrals}</div>
-            <p className="text-xs text-muted-foreground">
-              Users who joined via referral
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Referral Rate
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{referralRate}%</div>
-            <Progress value={referralRate} className="mt-2" />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Of all users joined via referral
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Top Referrers
-            </CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {referralStats?.topReferrers.length ?? 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Users with successful referrals
-            </p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          title="Total Referrals"
+          value={totalReferrals}
+          icon={Gift}
+          description="Users who joined via referral"
+        />
+        <StatsCard
+          title="Referral Rate"
+          value={`${referralRate}%`}
+          icon={TrendingUp}
+          description="Of all users joined via referral"
+        >
+          <Progress value={referralRate} className="mt-2 mb-1" />
+        </StatsCard>
+        <StatsCard
+          title="Top Referrers"
+          value={referralStats.topReferrers.length}
+          icon={Trophy}
+          description="Users with successful referrals"
+        />
       </div>
 
       {/* Top Referrers Chart */}
-      {referralStats?.topReferrers && referralStats.topReferrers.length > 0 && (
+      {referralStats.topReferrers.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Top Referrers</CardTitle>
@@ -187,7 +161,7 @@ export default function ReferralsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {referralStats?.topReferrers && referralStats.topReferrers.length > 0 ? (
+          {referralStats.topReferrers.length > 0 ? (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>

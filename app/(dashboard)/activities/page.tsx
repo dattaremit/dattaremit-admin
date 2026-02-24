@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -10,10 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -30,82 +27,35 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-} from "@/components/ui/pagination";
 import { api, type Activity } from "@/lib/api";
-
-const ACTIVITY_TYPES = [
-  "DEPOSIT",
-  "WITHDRAWAL",
-  "TRANSFER",
-  "PAYMENT",
-  "REFUND",
-  "KYC_SUBMITTED",
-  "KYC_APPROVED",
-  "KYC_REJECTED",
-  "KYC_PENDING",
-  "KYC_VERIFIED",
-  "KYC_FAILED",
-  "ACCOUNT_APPROVED",
-  "ACCOUNT_ACTIVATED",
-  "ACCOUNT_DEACTIVATED",
-];
-
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  COMPLETE: "default",
-  PENDING: "secondary",
-  FAILED: "destructive",
-};
+import { STATUS_BADGE_VARIANT, ACTIVITY_TYPES } from "@/lib/constants";
+import { formatDate } from "@/lib/utils";
+import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
+import { PagePagination } from "@/components/page-pagination";
+import { TableSkeleton } from "@/components/table-skeleton";
+import { ActivityMetadataDialog } from "@/components/activity-metadata-dialog";
+import { ErrorState } from "@/components/error-state";
 
 export default function ActivitiesPage() {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [loading, setLoading] = useState(true);
-  const limit = 20;
 
-  const fetchActivities = useCallback(async () => {
-    setLoading(true);
-    try {
-      const type = typeFilter === "all" ? undefined : typeFilter;
-      const status = statusFilter === "all" ? undefined : statusFilter;
-      const res = await api.getActivities(page, limit, type, status);
-      setActivities(res.data.activities ?? []);
-      setTotal(res.data.total);
-    } catch (err) {
-      console.error("Failed to fetch activities:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, typeFilter, statusFilter]);
+  const { data: activities, total, page, setPage, totalPages, loading, error } =
+    usePaginatedFetch<Activity>(
+      async (page, limit) => {
+        const type = typeFilter === "all" ? undefined : typeFilter;
+        const status = statusFilter === "all" ? undefined : statusFilter;
+        const res = await api.getActivities(page, limit, type, status);
+        return { data: res.data.activities ?? [], total: res.data.total };
+      },
+      [typeFilter, statusFilter],
+    );
 
-  useEffect(() => {
-    fetchActivities();
-  }, [fetchActivities]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [typeFilter, statusFilter]);
-
-  const totalPages = Math.ceil(total / limit);
+  if (error) return <ErrorState message={error} />;
 
   return (
     <div className="space-y-6">
@@ -154,11 +104,7 @@ export default function ActivitiesPage() {
 
           {/* Table */}
           {loading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
+            <TableSkeleton />
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -219,7 +165,7 @@ export default function ActivitiesPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={statusVariant[activity.status] ?? "outline"}>
+                          <Badge variant={STATUS_BADGE_VARIANT[activity.status] ?? "outline"}>
                             {activity.status}
                           </Badge>
                         </TableCell>
@@ -230,31 +176,13 @@ export default function ActivitiesPage() {
                           {activity.amount || "-"}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {new Date(activity.created_at).toLocaleDateString()}
+                          {formatDate(activity.created_at)}
                         </TableCell>
                         <TableCell>
-                          {activity.metadata && (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  View
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Activity Metadata</DialogTitle>
-                                  <DialogDescription>
-                                    Raw metadata for {activity.type}
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <ScrollArea className="max-h-[400px]">
-                                  <pre className="rounded-md bg-muted p-4 text-xs">
-                                    {JSON.stringify(activity.metadata, null, 2)}
-                                  </pre>
-                                </ScrollArea>
-                              </DialogContent>
-                            </Dialog>
-                          )}
+                          <ActivityMetadataDialog
+                            metadata={activity.metadata}
+                            activityType={activity.type}
+                          />
                         </TableCell>
                       </TableRow>
                     ))
@@ -264,40 +192,7 @@ export default function ActivitiesPage() {
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-                </PaginationItem>
-                <PaginationItem>
-                  <span className="px-4 text-sm text-muted-foreground">
-                    Page {page} of {totalPages}
-                  </span>
-                </PaginationItem>
-                <PaginationItem>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
+          <PagePagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
     </div>

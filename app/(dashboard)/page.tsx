@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -18,9 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -66,15 +63,21 @@ import {
   type StatusCount,
   type ReferralStats,
 } from "@/lib/api";
+import { STATUS_BADGE_VARIANT, PIE_COLORS } from "@/lib/constants";
+import { formatDate, formatMonthShort } from "@/lib/utils";
+import { useApiFetch } from "@/hooks/use-api-fetch";
+import { StatsCard } from "@/components/stats-card";
+import { DashboardSkeleton } from "@/components/dashboard-skeleton";
+import { ErrorState } from "@/components/error-state";
 
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  ACTIVE: "default",
-  PENDING: "secondary",
-  INITIAL: "outline",
-  REJECTED: "destructive",
-  COMPLETE: "default",
-  FAILED: "destructive",
-};
+interface DashboardData {
+  stats: DashboardStats;
+  registrationData: ChartDataPoint[];
+  activityTypeData: TypeCount[];
+  accountStatusData: StatusCount[];
+  kycData: TypeCount[];
+  referralStats: ReferralStats;
+}
 
 const registrationChartConfig = {
   count: { label: "Registrations", color: "var(--chart-1)" },
@@ -84,34 +87,11 @@ const activityTypeChartConfig = {
   count: { label: "Count", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
-const PIE_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-];
-
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [registrationData, setRegistrationData] = useState<ChartDataPoint[]>([]);
-  const [activityTypeData, setActivityTypeData] = useState<TypeCount[]>([]);
-  const [accountStatusData, setAccountStatusData] = useState<StatusCount[]>([]);
-  const [kycData, setKycData] = useState<TypeCount[]>([]);
-  const [referralStats, setReferralStats] = useState<ReferralStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [
-          statsRes,
-          regRes,
-          actTypeRes,
-          accStatusRes,
-          kycRes,
-          refRes,
-        ] = await Promise.all([
+  const { data, loading, error, refetch } = useApiFetch<DashboardData>(
+    async () => {
+      const [statsRes, regRes, actTypeRes, accStatusRes, kycRes, refRes] =
+        await Promise.all([
           api.getDashboardStats(),
           api.getRegistrationChart(),
           api.getActivityTypeChart(),
@@ -119,48 +99,40 @@ export default function DashboardPage() {
           api.getKycActivityChart(),
           api.getReferralStats(),
         ]);
+      return {
+        stats: statsRes.data,
+        registrationData: regRes.data,
+        activityTypeData: actTypeRes.data,
+        accountStatusData: accStatusRes.data,
+        kycData: kycRes.data,
+        referralStats: refRes.data,
+      };
+    },
+  );
 
-        setStats(statsRes.data);
-        setRegistrationData(regRes.data);
-        setActivityTypeData(actTypeRes.data);
-        setAccountStatusData(accStatusRes.data);
-        setKycData(kycRes.data);
-        setReferralStats(refRes.data);
-      } catch (err) {
-        console.error("Failed to fetch dashboard data:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
+  if (loading) return <DashboardSkeleton />;
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
+  if (!data) return null;
 
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return <DashboardSkeleton />;
-  }
-
+  const { stats, registrationData, activityTypeData, accountStatusData, kycData, referralStats } = data;
   const totalStatusUsers = accountStatusData.reduce((sum, d) => sum + d.count, 0);
 
   const accountStatusChartConfig = Object.fromEntries(
     accountStatusData.map((d, i) => [
       d.status,
       { label: d.status, color: PIE_COLORS[i % PIE_COLORS.length] },
-    ])
+    ]),
   ) satisfies ChartConfig;
 
   const kycChartConfig = Object.fromEntries(
     kycData.map((d, i) => [
       d.type,
       { label: d.type.replace("KYC_", ""), color: PIE_COLORS[i % PIE_COLORS.length] },
-    ])
+    ]),
   ) satisfies ChartConfig;
 
   const formattedRegData = registrationData.map((d) => ({
-    month: new Date(d.month).toLocaleDateString("en-US", {
-      month: "short",
-      year: "2-digit",
-    }),
+    month: formatMonthShort(d.month),
     count: d.count,
   }));
 
@@ -177,25 +149,25 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Users"
-          value={stats?.totalUsers ?? 0}
+          value={stats.totalUsers}
           icon={Users}
           description="All registered users"
         />
         <StatsCard
           title="Active Users"
-          value={stats?.activeUsers ?? 0}
+          value={stats.activeUsers}
           icon={UserCheck}
           description="Verified & active"
         />
         <StatsCard
           title="Pending KYC"
-          value={stats?.pendingKyc ?? 0}
+          value={stats.pendingKyc}
           icon={Clock}
           description="Awaiting verification"
         />
         <StatsCard
           title="Total Activities"
-          value={stats?.totalActivities ?? 0}
+          value={stats.totalActivities}
           icon={Activity}
           description="All activity records"
         />
@@ -224,12 +196,7 @@ export default function DashboardPage() {
                   <ChartContainer config={registrationChartConfig} className="h-[300px] w-full">
                     <AreaChart data={formattedRegData} accessibilityLayer>
                       <CartesianGrid vertical={false} />
-                      <XAxis
-                        dataKey="month"
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={8}
-                      />
+                      <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
                       <YAxis tickLine={false} axisLine={false} tickMargin={8} />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <defs>
@@ -257,9 +224,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Account Status Distribution</CardTitle>
-                <CardDescription>
-                  Breakdown of user account statuses
-                </CardDescription>
+                <CardDescription>Breakdown of user account statuses</CardDescription>
               </CardHeader>
               <CardContent>
                 {accountStatusData.length > 0 ? (
@@ -303,7 +268,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {stats?.recentUsers.map((user) => (
+                  {stats.recentUsers.map((user) => (
                     <div key={user.id} className="flex items-center gap-3">
                       <Avatar className="h-9 w-9">
                         <AvatarFallback className="text-xs">
@@ -327,12 +292,12 @@ export default function DashboardPage() {
                           {user.email}
                         </p>
                       </div>
-                      <Badge variant={statusVariant[user.accountStatus] ?? "outline"}>
+                      <Badge variant={STATUS_BADGE_VARIANT[user.accountStatus] ?? "outline"}>
                         {user.accountStatus}
                       </Badge>
                     </div>
                   ))}
-                  {(!stats?.recentUsers || stats.recentUsers.length === 0) && (
+                  {stats.recentUsers.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No users yet
                     </p>
@@ -348,7 +313,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {stats?.recentActivities.map((activity) => (
+                  {stats.recentActivities.map((activity) => (
                     <div key={activity.id} className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
                         <Activity className="h-4 w-4 text-muted-foreground" />
@@ -362,16 +327,15 @@ export default function DashboardPage() {
                             ? `${activity.user.firstName} ${activity.user.lastName}`
                             : "Unknown"}
                           {" - "}
-                          {new Date(activity.created_at).toLocaleDateString()}
+                          {formatDate(activity.created_at)}
                         </p>
                       </div>
-                      <Badge variant={statusVariant[activity.status] ?? "outline"}>
+                      <Badge variant={STATUS_BADGE_VARIANT[activity.status] ?? "outline"}>
                         {activity.status}
                       </Badge>
                     </div>
                   ))}
-                  {(!stats?.recentActivities ||
-                    stats.recentActivities.length === 0) && (
+                  {stats.recentActivities.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No activities yet
                     </p>
@@ -386,9 +350,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Account Status Breakdown</CardTitle>
-                <CardDescription>
-                  Progress of user account statuses
-                </CardDescription>
+                <CardDescription>Progress of user account statuses</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {accountStatusData.map((d) => (
@@ -399,9 +361,7 @@ export default function DashboardPage() {
                         {d.count} ({Math.round((d.count / totalStatusUsers) * 100)}%)
                       </span>
                     </div>
-                    <Progress
-                      value={(d.count / totalStatusUsers) * 100}
-                    />
+                    <Progress value={(d.count / totalStatusUsers) * 100} />
                   </div>
                 ))}
               </CardContent>
@@ -416,9 +376,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Activity Types</CardTitle>
-                <CardDescription>
-                  Distribution of activity types
-                </CardDescription>
+                <CardDescription>Distribution of activity types</CardDescription>
               </CardHeader>
               <CardContent>
                 {activityTypeData.length > 0 ? (
@@ -442,11 +400,7 @@ export default function DashboardPage() {
                         tick={{ fontSize: 11 }}
                       />
                       <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar
-                        dataKey="count"
-                        fill="var(--chart-2)"
-                        radius={[0, 4, 4, 0]}
-                      />
+                      <Bar dataKey="count" fill="var(--chart-2)" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ChartContainer>
                 ) : (
@@ -482,11 +436,7 @@ export default function DashboardPage() {
                         tick={false}
                       />
                       <ChartTooltip content={<ChartTooltipContent />} />
-                      <RadialBar
-                        dataKey="value"
-                        cornerRadius={5}
-                        background
-                      />
+                      <RadialBar dataKey="value" cornerRadius={5} background />
                       <ChartLegend
                         content={<ChartLegendContent nameKey="name" />}
                         className="-translate-y-2"
@@ -505,11 +455,11 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle>Referral Program</CardTitle>
               <CardDescription>
-                Total referrals: {referralStats?.totalReferrals ?? 0} users joined via referral
+                Total referrals: {referralStats.totalReferrals} users joined via referral
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {referralStats?.topReferrers && referralStats.topReferrers.length > 0 ? (
+              {referralStats.topReferrers.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -524,10 +474,7 @@ export default function DashboardPage() {
                       <TableRow key={referrer.id}>
                         <TableCell className="font-medium">#{i + 1}</TableCell>
                         <TableCell>
-                          <Link
-                            href={`/users/${referrer.id}`}
-                            className="hover:underline"
-                          >
+                          <Link href={`/users/${referrer.id}`} className="hover:underline">
                             {referrer.firstName} {referrer.lastName}
                           </Link>
                         </TableCell>
@@ -552,69 +499,6 @@ export default function DashboardPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-function StatsCard({
-  title,
-  value,
-  icon: Icon,
-  description,
-}: {
-  title: string;
-  value: number;
-  icon: React.ComponentType<{ className?: string }>;
-  description: string;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value.toLocaleString()}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <Skeleton className="h-9 w-48" />
-        <Skeleton className="mt-2 h-4 w-72" />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
-              <Skeleton className="mt-1 h-3 w-32" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <div className="grid gap-6 md:grid-cols-2">
-        {[1, 2].map((i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="h-4 w-56" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-[300px] w-full" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
     </div>
   );
 }

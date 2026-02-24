@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { Search, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Search, Eye } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -35,52 +34,29 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-} from "@/components/ui/pagination";
 import { api, type User } from "@/lib/api";
-
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  ACTIVE: "default",
-  PENDING: "secondary",
-  INITIAL: "outline",
-  REJECTED: "destructive",
-};
+import { STATUS_BADGE_VARIANT } from "@/lib/constants";
+import { formatDate } from "@/lib/utils";
+import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
+import { PagePagination } from "@/components/page-pagination";
+import { TableSkeleton } from "@/components/table-skeleton";
+import { ErrorState } from "@/components/error-state";
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [loading, setLoading] = useState(true);
-  const limit = 20;
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const status = statusFilter === "all" ? undefined : statusFilter;
-      const res = await api.getUsers(page, limit, search || undefined, status);
-      setUsers(res.data.users ?? []);
-      setTotal(res.data.total);
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search, statusFilter]);
+  const { data: users, total, page, setPage, totalPages, loading, error } =
+    usePaginatedFetch<User>(
+      async (page, limit) => {
+        const status = statusFilter === "all" ? undefined : statusFilter;
+        const res = await api.getUsers(page, limit, search || undefined, status);
+        return { data: res.data.users ?? [], total: res.data.total };
+      },
+      [search, statusFilter],
+    );
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, statusFilter]);
-
-  const totalPages = Math.ceil(total / limit);
+  if (error) return <ErrorState message={error} />;
 
   return (
     <div className="space-y-6">
@@ -126,11 +102,7 @@ export default function UsersPage() {
 
           {/* Table */}
           {loading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
+            <TableSkeleton />
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -176,7 +148,7 @@ export default function UsersPage() {
                           {user.phoneNumber}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={statusVariant[user.accountStatus] ?? "outline"}>
+                          <Badge variant={STATUS_BADGE_VARIANT[user.accountStatus] ?? "outline"}>
                             {user.accountStatus}
                           </Badge>
                         </TableCell>
@@ -190,7 +162,7 @@ export default function UsersPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {new Date(user.created_at).toLocaleDateString()}
+                          {formatDate(user.created_at)}
                         </TableCell>
                         <TableCell className="text-right">
                           <Tooltip>
@@ -212,40 +184,7 @@ export default function UsersPage() {
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-                </PaginationItem>
-                <PaginationItem>
-                  <span className="px-4 text-sm text-muted-foreground">
-                    Page {page} of {totalPages}
-                  </span>
-                </PaginationItem>
-                <PaginationItem>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
+          <PagePagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
     </div>

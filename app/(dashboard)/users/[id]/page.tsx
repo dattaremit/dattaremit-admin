@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Mail, Phone, Globe, Calendar, Shield, Gift } from "lucide-react";
@@ -25,46 +24,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { api, type User } from "@/lib/api";
-
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  ACTIVE: "default",
-  PENDING: "secondary",
-  INITIAL: "outline",
-  REJECTED: "destructive",
-  COMPLETE: "default",
-  FAILED: "destructive",
-};
+import { api } from "@/lib/api";
+import { STATUS_BADGE_VARIANT } from "@/lib/constants";
+import { formatDate } from "@/lib/utils";
+import { useApiFetch } from "@/hooks/use-api-fetch";
+import { InfoRow } from "@/components/info-row";
+import { ActivityMetadataDialog } from "@/components/activity-metadata-dialog";
 
 export default function UserDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await api.getUserById(id);
-        setUser(res.data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch user");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchUser();
-  }, [id]);
+  const { data: user, loading, error } = useApiFetch(
+    async () => {
+      const res = await api.getUserById(id);
+      return res.data;
+    },
+    [id],
+  );
 
   if (loading) {
     return (
@@ -120,7 +97,7 @@ export default function UserDetailPage() {
           </div>
         </div>
         <Badge
-          variant={statusVariant[user.accountStatus] ?? "outline"}
+          variant={STATUS_BADGE_VARIANT[user.accountStatus] ?? "outline"}
           className="ml-auto"
         >
           {user.accountStatus}
@@ -157,7 +134,7 @@ export default function UserDetailPage() {
                 <InfoRow
                   icon={Calendar}
                   label="Date of Birth"
-                  value={user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : "N/A"}
+                  value={user.dateOfBirth ? formatDate(user.dateOfBirth) : "N/A"}
                 />
                 <Separator />
                 <InfoRow
@@ -192,19 +169,11 @@ export default function UserDetailPage() {
                   value={user.referredByCode || "None"}
                 />
                 <Separator />
-                <div className="flex items-start gap-3">
-                  <Calendar className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Joined</p>
-                    <p className="text-sm font-medium">
-                      {new Date(user.created_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
+                <InfoRow
+                  icon={Calendar}
+                  label="Joined"
+                  value={formatDate(user.created_at)}
+                />
                 <Separator />
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Integration IDs</p>
@@ -292,7 +261,7 @@ export default function UserDetailPage() {
                             {activity.type.replace(/_/g, " ")}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={statusVariant[activity.status] ?? "outline"}>
+                            <Badge variant={STATUS_BADGE_VARIANT[activity.status] ?? "outline"}>
                               {activity.status}
                             </Badge>
                           </TableCell>
@@ -303,31 +272,13 @@ export default function UserDetailPage() {
                             {activity.amount || "-"}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {new Date(activity.created_at).toLocaleDateString()}
+                            {formatDate(activity.created_at)}
                           </TableCell>
                           <TableCell>
-                            {activity.metadata && (
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    View
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Activity Metadata</DialogTitle>
-                                    <DialogDescription>
-                                      Raw metadata for {activity.type}
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <ScrollArea className="max-h-[400px]">
-                                    <pre className="rounded-md bg-muted p-4 text-xs">
-                                      {JSON.stringify(activity.metadata, null, 2)}
-                                    </pre>
-                                  </ScrollArea>
-                                </DialogContent>
-                              </Dialog>
-                            )}
+                            <ActivityMetadataDialog
+                              metadata={activity.metadata}
+                              activityType={activity.type}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}
@@ -343,26 +294,6 @@ export default function UserDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-function InfoRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <Icon className="mt-0.5 h-4 w-4 text-muted-foreground" />
-      <div>
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium">{value}</p>
-      </div>
     </div>
   );
 }
