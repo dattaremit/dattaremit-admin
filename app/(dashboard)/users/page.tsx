@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Eye } from "lucide-react";
+import { Search, Eye, MoreHorizontal, Pencil, Shield, Trash2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -34,6 +34,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { api, type User } from "@/lib/api";
 import { STATUS_BADGE_VARIANT } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
@@ -41,12 +48,20 @@ import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
 import { PagePagination } from "@/components/page-pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { ErrorState } from "@/components/error-state";
+import { AddUserDialog } from "@/components/add-user-dialog";
+import { EditUserDialog } from "@/components/edit-user-dialog";
+import { DeleteUserDialog } from "@/components/delete-user-dialog";
+import { ChangeRoleDialog } from "@/components/change-role-dialog";
 
 export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const { data: users, total, page, setPage, totalPages, loading, error } =
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [changeRoleUser, setChangeRoleUser] = useState<User | null>(null);
+
+  const { data: users, total, page, setPage, totalPages, loading, error, refetch } =
     usePaginatedFetch<User>(
       async (page, limit) => {
         const status = statusFilter === "all" ? undefined : statusFilter;
@@ -60,11 +75,14 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-        <p className="text-muted-foreground">
-          Manage and view all registered users
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
+          <p className="text-muted-foreground">
+            Manage and view all registered users
+          </p>
+        </div>
+        <AddUserDialog onSuccess={refetch} />
       </div>
 
       <Card>
@@ -165,16 +183,43 @@ export default function UsersPage() {
                           {formatDate(user.created_at)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" asChild>
-                                <Link href={`/users/${user.id}`}>
-                                  <Eye className="h-4 w-4" />
-                                </Link>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>View details</TooltipContent>
-                          </Tooltip>
+                          <div className="flex items-center justify-end gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" asChild>
+                                  <Link href={`/users/${user.id}`}>
+                                    <Eye className="h-4 w-4" />
+                                  </Link>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>View details</TooltipContent>
+                            </Tooltip>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => setEditUser(user)}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setChangeRoleUser(user)}>
+                                  <Shield className="mr-2 h-4 w-4" />
+                                  Change Role
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={() => setDeleteUser(user)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -187,6 +232,34 @@ export default function UsersPage() {
           <PagePagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      {editUser && (
+        <EditUserDialog
+          user={editUser}
+          open={!!editUser}
+          onOpenChange={(open) => !open && setEditUser(null)}
+          onSuccess={refetch}
+        />
+      )}
+
+      {deleteUser && (
+        <DeleteUserDialog
+          user={deleteUser}
+          open={!!deleteUser}
+          onOpenChange={(open) => !open && setDeleteUser(null)}
+          onSuccess={refetch}
+        />
+      )}
+
+      {changeRoleUser && (
+        <ChangeRoleDialog
+          user={changeRoleUser}
+          open={!!changeRoleUser}
+          onOpenChange={(open) => !open && setChangeRoleUser(null)}
+          onSuccess={refetch}
+        />
+      )}
     </div>
   );
 }

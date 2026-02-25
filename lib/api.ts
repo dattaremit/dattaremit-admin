@@ -136,6 +136,30 @@ export interface PaginatedResponse<T> {
   limit: number;
 }
 
+export interface CreateUserPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumberPrefix: string;
+  phoneNumber: string;
+  dateOfBirth: string;
+  nationality?: string;
+  role?: "ADMIN" | "USER";
+  accountStatus?: "INITIAL" | "ACTIVE" | "PENDING" | "REJECTED";
+}
+
+export interface UpdateUserPayload {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phoneNumberPrefix?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  role?: "ADMIN" | "USER";
+  accountStatus?: "INITIAL" | "ACTIVE" | "PENDING" | "REJECTED";
+}
+
 export const api = {
   getDashboardStats: () =>
     adminFetch<ApiResponse<DashboardStats>>("/stats"),
@@ -171,4 +195,27 @@ export const api = {
 
   getReferralStats: () =>
     adminFetch<ApiResponse<ReferralStats>>("/referral-stats"),
+
+  createUser: (data: CreateUserPayload) =>
+    adminFetch<ApiResponse<User>>("/users", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateUser: (id: string, data: UpdateUserPayload) =>
+    adminFetch<ApiResponse<User>>(`/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteUser: (id: string) =>
+    adminFetch<ApiResponse<void>>(`/users/${id}`, {
+      method: "DELETE",
+    }),
+
+  changeUserRole: (id: string, role: "ADMIN" | "USER") =>
+    adminFetch<ApiResponse<User>>(`/users/${id}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
 };

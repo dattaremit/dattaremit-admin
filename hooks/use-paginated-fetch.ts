@@ -10,6 +10,7 @@ interface UsePaginatedFetchResult<T> {
   totalPages: number;
   loading: boolean;
   error: string | null;
+  refetch: () => void;
 }
 
 export function usePaginatedFetch<T>(
@@ -53,5 +54,5 @@ export function usePaginatedFetch<T>(
 
   const totalPages = Math.ceil(total / limit);
 
-  return { data, total, page, setPage, totalPages, loading, error };
+  return { data, total, page, setPage, totalPages, loading, error, refetch: fetchData };
 }

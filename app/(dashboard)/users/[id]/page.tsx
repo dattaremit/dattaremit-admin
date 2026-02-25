@@ -1,8 +1,9 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Mail, Phone, Globe, Calendar, Shield, Gift } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Globe, Calendar, Shield, Gift, Pencil, Trash2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -30,12 +31,20 @@ import { formatDate } from "@/lib/utils";
 import { useApiFetch } from "@/hooks/use-api-fetch";
 import { InfoRow } from "@/components/info-row";
 import { ActivityMetadataDialog } from "@/components/activity-metadata-dialog";
+import { EditUserDialog } from "@/components/edit-user-dialog";
+import { DeleteUserDialog } from "@/components/delete-user-dialog";
+import { ChangeRoleDialog } from "@/components/change-role-dialog";
 
 export default function UserDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
 
-  const { data: user, loading, error } = useApiFetch(
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [changeRoleOpen, setChangeRoleOpen] = useState(false);
+
+  const { data: user, loading, error, refetch } = useApiFetch(
     async () => {
       const res = await api.getUserById(id);
       return res.data;
@@ -104,6 +113,22 @@ export default function UserDetailPage() {
         </Badge>
       </div>
 
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+          <Pencil className="mr-2 h-4 w-4" />
+          Edit User
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setChangeRoleOpen(true)}>
+          <Shield className="mr-2 h-4 w-4" />
+          Change Role
+        </Button>
+        <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </Button>
+      </div>
+
       <Tabs defaultValue="profile">
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -155,6 +180,12 @@ export default function UserDetailPage() {
                   icon={Shield}
                   label="Account Status"
                   value={user.accountStatus}
+                />
+                <Separator />
+                <InfoRow
+                  icon={Shield}
+                  label="Role"
+                  value={user.role}
                 />
                 <Separator />
                 <InfoRow
@@ -294,6 +325,28 @@ export default function UserDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <EditUserDialog
+        user={user}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSuccess={refetch}
+      />
+
+      <DeleteUserDialog
+        user={user}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onSuccess={() => router.push("/users")}
+      />
+
+      <ChangeRoleDialog
+        user={user}
+        open={changeRoleOpen}
+        onOpenChange={setChangeRoleOpen}
+        onSuccess={refetch}
+      />
     </div>
   );
 }
