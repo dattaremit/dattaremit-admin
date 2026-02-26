@@ -201,6 +201,12 @@ export default function UserDetailPage() {
                 />
                 <Separator />
                 <InfoRow
+                  icon={Gift}
+                  label="Refer Value"
+                  value={String(user.referValue ?? 1)}
+                />
+                <Separator />
+                <InfoRow
                   icon={Calendar}
                   label="Joined"
                   value={formatDate(user.created_at)}

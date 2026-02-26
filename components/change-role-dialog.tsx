@@ -30,7 +30,7 @@ interface ChangeRoleDialogProps {
 
 export function ChangeRoleDialog({ user, open, onOpenChange, onSuccess }: ChangeRoleDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<"ADMIN" | "USER">(user.role);
+  const [role, setRole] = useState<"ADMIN" | "USER" | "INFLUENCER" | "PROMOTER">(user.role);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,13 +61,15 @@ export function ChangeRoleDialog({ user, open, onOpenChange, onSuccess }: Change
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as "ADMIN" | "USER")}>
+            <Select value={role} onValueChange={(v) => setRole(v as "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER")}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="USER">User</SelectItem>
                 <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="INFLUENCER">Influencer</SelectItem>
+                <SelectItem value="PROMOTER">Promoter</SelectItem>
               </SelectContent>
             </Select>
           </div>

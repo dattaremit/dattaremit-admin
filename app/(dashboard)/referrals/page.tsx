@@ -1,7 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import { Gift, Users, TrendingUp, Trophy } from "lucide-react";
+import { useState } from "react";
+import { ErrorState } from "@/components/error-state";
+import { PagePagination } from "@/components/page-pagination";
+import { StatsCard } from "@/components/stats-card";
+import { TableSkeleton } from "@/components/table-skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -9,10 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -21,42 +25,60 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
-import { api, type ReferralStats, type DashboardStats } from "@/lib/api";
 import { useApiFetch } from "@/hooks/use-api-fetch";
-import { StatsCard } from "@/components/stats-card";
-import { ErrorState } from "@/components/error-state";
+import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
+import { api, type DashboardStats } from "@/lib/api";
+import { Gift, Search, TrendingUp, Trophy, Users } from "lucide-react";
+import Link from "next/link";
 
-interface ReferralData {
-  referralStats: ReferralStats;
+interface StatsData {
+  totalReferrals: number;
   dashStats: DashboardStats;
 }
 
-const referralChartConfig = {
-  referralCount: { label: "Referrals", color: "var(--chart-1)" },
-} satisfies ChartConfig;
+interface Referrer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  referCode: string;
+  referralCount: number;
+}
 
 export default function ReferralsPage() {
-  const { data, loading, error, refetch } = useApiFetch<ReferralData>(
-    async () => {
+  const [search, setSearch] = useState("");
+
+  // Stats cards + chart (no filtering needed)
+  const { data: statsData, loading: statsLoading, error: statsError, refetch: statsRefetch } =
+    useApiFetch<StatsData>(async () => {
       const [refRes, statsRes] = await Promise.all([
         api.getReferralStats(),
         api.getDashboardStats(),
       ]);
       return {
-        referralStats: refRes.data,
+        totalReferrals: refRes.data.totalReferrals,
         dashStats: statsRes.data,
       };
+    });
+
+  // Leaderboard table (with search + pagination)
+  const {
+    data: topReferrers,
+    total,
+    page,
+    setPage,
+    totalPages,
+    loading: tableLoading,
+    error: tableError,
+    refetch: tableRefetch,
+  } = usePaginatedFetch<Referrer>(
+    async (page, limit) => {
+      const res = await api.getReferralStats(page, limit, search || undefined);
+      return { data: res.data.topReferrers, total: res.data.total };
     },
+    [search],
   );
 
-  if (loading) {
+  if (statsLoading) {
     return (
       <div className="space-y-6">
         <div>
@@ -68,18 +90,18 @@ export default function ReferralsPage() {
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
-        <Skeleton className="h-[400px]" />
+        <Skeleton className="h-100" />
       </div>
     );
   }
 
-  if (error) return <ErrorState message={error} onRetry={refetch} />;
-  if (!data) return null;
+  if (statsError) return <ErrorState message={statsError} onRetry={statsRefetch} />;
+  if (!statsData) return null;
 
-  const { referralStats, dashStats } = data;
+  const { totalReferrals, dashStats } = statsData;
   const totalUsers = dashStats.totalUsers;
-  const totalReferrals = referralStats.totalReferrals;
-  const referralRate = totalUsers > 0 ? Math.round((totalReferrals / totalUsers) * 100) : 0;
+  const referralRate =
+    totalUsers > 0 ? Math.round((totalReferrals / totalUsers) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -108,60 +130,36 @@ export default function ReferralsPage() {
         </StatsCard>
         <StatsCard
           title="Top Referrers"
-          value={referralStats.topReferrers.length}
+          value={total}
           icon={Trophy}
           description="Users with successful referrals"
         />
       </div>
 
-      {/* Top Referrers Chart */}
-      {referralStats.topReferrers.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Referrers</CardTitle>
-            <CardDescription>
-              Users who brought the most referrals
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={referralChartConfig} className="h-[300px] w-full">
-              <BarChart
-                data={referralStats.topReferrers.map((r) => ({
-                  name: `${r.firstName} ${r.lastName}`,
-                  referralCount: r.referralCount,
-                }))}
-                accessibilityLayer
-              >
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar
-                  dataKey="referralCount"
-                  fill="var(--chart-1)"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Top Referrers Table */}
+      {/* Referrer Leaderboard */}
       <Card>
         <CardHeader>
           <CardTitle>Referrer Leaderboard</CardTitle>
-          <CardDescription>
-            Detailed breakdown of top referrers
-          </CardDescription>
+          <CardDescription>Detailed breakdown of top referrers</CardDescription>
         </CardHeader>
-        <CardContent>
-          {referralStats.topReferrers.length > 0 ? (
+        <CardContent className="space-y-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, email, or referral code..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          {/* Table */}
+          {tableError ? (
+            <ErrorState message={tableError} onRetry={tableRefetch} />
+          ) : tableLoading ? (
+            <TableSkeleton />
+          ) : topReferrers.length > 0 ? (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -174,14 +172,14 @@ export default function ReferralsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {referralStats.topReferrers.map((referrer, i) => (
+                  {topReferrers.map((referrer, i) => (
                     <TableRow key={referrer.id}>
                       <TableCell>
                         <Badge
-                          variant={i === 0 ? "default" : "outline"}
+                          variant={page === 1 && i === 0 ? "default" : "outline"}
                           className="w-8 justify-center"
                         >
-                          {i + 1}
+                          {(page - 1) * 20 + i + 1}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -223,10 +221,14 @@ export default function ReferralsPage() {
               <Users className="mb-4 h-12 w-12 text-muted-foreground/50" />
               <p className="text-muted-foreground">No referral data yet</p>
               <p className="text-sm text-muted-foreground/70">
-                Referral stats will appear once users start referring others
+                {search
+                  ? "No referrers match your search"
+                  : "Referral stats will appear once users start referring others"}
               </p>
             </div>
           )}
+
+          <PagePagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
     </div>

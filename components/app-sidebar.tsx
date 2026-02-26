@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   Gift,
+  Megaphone,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,6 +31,7 @@ const navItems = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
   { title: "Users", href: "/users", icon: Users },
   { title: "Activities", href: "/activities", icon: Activity },
+  { title: "Marketing", href: "/marketing", icon: Megaphone },
   { title: "Referrals", href: "/referrals", icon: Gift },
   { title: "Settings", href: "/settings", icon: Settings },
 ];

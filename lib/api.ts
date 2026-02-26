@@ -62,8 +62,9 @@ export interface User {
   clerkUserId: string;
   referCode: string | null;
   referredByCode: string | null;
+  referValue: number;
   accountStatus: "INITIAL" | "ACTIVE" | "PENDING" | "REJECTED";
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER";
   zynkEntityId: string | null;
   zynkExternalAccountId: string | null;
   zynkDepositAccountId: string | null;
@@ -126,11 +127,27 @@ export interface ReferralStats {
     referCode: string;
     referralCount: number;
   }[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface MarketingStats {
+  totalInfluencers: number;
+  totalPromoters: number;
+  totalPromoterReferrals: number;
 }
 
 export interface PaginatedResponse<T> {
   users?: T[];
   activities?: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface PromoterPaginatedResponse {
+  promoters: User[];
   total: number;
   page: number;
   limit: number;
@@ -148,6 +165,19 @@ export interface CreateUserPayload {
   accountStatus?: "INITIAL" | "ACTIVE" | "PENDING" | "REJECTED";
 }
 
+export interface CreatePromoterPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumberPrefix: string;
+  phoneNumber: string;
+  dateOfBirth: string;
+  nationality?: string;
+  role: "INFLUENCER" | "PROMOTER";
+  referValue: number;
+  accountStatus?: "INITIAL" | "ACTIVE" | "PENDING" | "REJECTED";
+}
+
 export interface UpdateUserPayload {
   firstName?: string;
   lastName?: string;
@@ -156,8 +186,9 @@ export interface UpdateUserPayload {
   phoneNumber?: string;
   dateOfBirth?: string;
   nationality?: string;
-  role?: "ADMIN" | "USER";
+  role?: "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER";
   accountStatus?: "INITIAL" | "ACTIVE" | "PENDING" | "REJECTED";
+  referValue?: number;
 }
 
 export const api = {
@@ -193,8 +224,11 @@ export const api = {
   getKycActivityChart: () =>
     adminFetch<ApiResponse<TypeCount[]>>("/charts/kyc"),
 
-  getReferralStats: () =>
-    adminFetch<ApiResponse<ReferralStats>>("/referral-stats"),
+  getReferralStats: (page = 1, limit = 20, search?: string) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (search) params.set("search", search);
+    return adminFetch<ApiResponse<ReferralStats>>(`/referral-stats?${params}`);
+  },
 
   createUser: (data: CreateUserPayload) =>
     adminFetch<ApiResponse<User>>("/users", {
@@ -213,9 +247,31 @@ export const api = {
       method: "DELETE",
     }),
 
-  changeUserRole: (id: string, role: "ADMIN" | "USER") =>
+  changeUserRole: (id: string, role: "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER") =>
     adminFetch<ApiResponse<User>>(`/users/${id}/role`, {
       method: "PATCH",
       body: JSON.stringify({ role }),
     }),
+
+  // Marketing
+  previewReferCode: (firstName: string, lastName: string) => {
+    const params = new URLSearchParams({ firstName, lastName });
+    return adminFetch<ApiResponse<{ referCode: string }>>(`/marketing/promoters/preview-refer-code?${params}`);
+  },
+
+  createPromoter: (data: CreatePromoterPayload) =>
+    adminFetch<ApiResponse<User>>("/marketing/promoters", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getPromoters: (page = 1, limit = 20, search?: string, role?: string) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (search) params.set("search", search);
+    if (role) params.set("role", role);
+    return adminFetch<ApiResponse<PromoterPaginatedResponse>>(`/marketing/promoters?${params}`);
+  },
+
+  getMarketingStats: () =>
+    adminFetch<ApiResponse<MarketingStats>>("/marketing/stats"),
 };

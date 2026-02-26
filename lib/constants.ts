@@ -27,6 +27,16 @@ export const ACTIVITY_TYPES = [
   "ACCOUNT_DEACTIVATED",
 ] as const;
 
+export const ROLE_BADGE_VARIANT: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  ADMIN: "destructive",
+  USER: "outline",
+  INFLUENCER: "default",
+  PROMOTER: "secondary",
+};
+
 export const ACCOUNT_STATUSES = ["INITIAL", "ACTIVE", "PENDING", "REJECTED"] as const;
 
 export const ACTIVITY_STATUSES = ["PENDING", "COMPLETE", "FAILED"] as const;

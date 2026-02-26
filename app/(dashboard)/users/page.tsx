@@ -48,7 +48,6 @@ import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
 import { PagePagination } from "@/components/page-pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { ErrorState } from "@/components/error-state";
-import { AddUserDialog } from "@/components/add-user-dialog";
 import { EditUserDialog } from "@/components/edit-user-dialog";
 import { DeleteUserDialog } from "@/components/delete-user-dialog";
 import { ChangeRoleDialog } from "@/components/change-role-dialog";
@@ -82,7 +81,6 @@ export default function UsersPage() {
             Manage and view all registered users
           </p>
         </div>
-        <AddUserDialog onSuccess={refetch} />
       </div>
 
       <Card>

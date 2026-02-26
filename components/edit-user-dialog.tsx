@@ -39,8 +39,9 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
   const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber);
   const [dateOfBirth, setDateOfBirth] = useState(user.dateOfBirth ? user.dateOfBirth.split("T")[0] : "");
   const [nationality, setNationality] = useState(user.nationality || "");
-  const [role, setRole] = useState<"ADMIN" | "USER">(user.role);
+  const [role, setRole] = useState<"ADMIN" | "USER" | "INFLUENCER" | "PROMOTER">(user.role);
   const [accountStatus, setAccountStatus] = useState(user.accountStatus);
+  const [referValue, setReferValue] = useState(user.referValue ?? 1);
 
   useEffect(() => {
     setFirstName(user.firstName);
@@ -52,6 +53,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
     setNationality(user.nationality || "");
     setRole(user.role);
     setAccountStatus(user.accountStatus);
+    setReferValue(user.referValue ?? 1);
   }, [user]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -69,6 +71,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
         nationality: nationality || undefined,
         role,
         accountStatus,
+        referValue,
       });
 
       toast.success("User updated successfully");
@@ -168,13 +171,15 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Role</Label>
-              <Select value={role} onValueChange={(v) => setRole(v as "ADMIN" | "USER")}>
+              <Select value={role} onValueChange={(v) => setRole(v as "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER")}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="USER">User</SelectItem>
                   <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="INFLUENCER">Influencer</SelectItem>
+                  <SelectItem value="PROMOTER">Promoter</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -192,6 +197,17 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-referValue">Refer Value</Label>
+            <Input
+              id="edit-referValue"
+              type="number"
+              min={1}
+              value={referValue}
+              onChange={(e) => setReferValue(parseInt(e.target.value) || 1)}
+            />
           </div>
 
           <DialogFooter>
