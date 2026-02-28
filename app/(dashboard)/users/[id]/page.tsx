@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Mail, Phone, Globe, Calendar, Shield, Gift, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Globe, Calendar, Shield, Gift, Pencil, Trash2, Zap } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -43,6 +44,20 @@ export default function UserDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [changeRoleOpen, setChangeRoleOpen] = useState(false);
+  const [achPushLoading, setAchPushLoading] = useState(false);
+
+  async function handleAchPushToggle(checked: boolean) {
+    setAchPushLoading(true);
+    try {
+      await api.toggleAchPush(id, checked);
+      refetch();
+    } catch {
+      // refetch to reset switch state
+      refetch();
+    } finally {
+      setAchPushLoading(false);
+    }
+  }
 
   const { data: user, loading, error, refetch } = useApiFetch(
     async () => {
@@ -205,6 +220,25 @@ export default function UserDetailPage() {
                   label="Refer Value"
                   value={String(user.referValue ?? 1)}
                 />
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Zap className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Fast Transfer (ACH Push)</p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.achPushEnabled
+                          ? "User can select fast ACH push transfers"
+                          : "User limited to regular ACH pull transfers"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={user.achPushEnabled}
+                    onCheckedChange={handleAchPushToggle}
+                    disabled={achPushLoading}
+                  />
+                </div>
                 <Separator />
                 <InfoRow
                   icon={Calendar}

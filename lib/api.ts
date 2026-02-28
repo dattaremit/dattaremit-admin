@@ -68,6 +68,7 @@ export interface User {
   zynkEntityId: string | null;
   zynkExternalAccountId: string | null;
   zynkDepositAccountId: string | null;
+  achPushEnabled: boolean;
   created_at: string;
   updated_at: string;
   addresses?: Address[];
@@ -251,6 +252,12 @@ export const api = {
     adminFetch<ApiResponse<User>>(`/users/${id}/role`, {
       method: "PATCH",
       body: JSON.stringify({ role }),
+    }),
+
+  toggleAchPush: (id: string, enabled: boolean) =>
+    adminFetch<ApiResponse<User>>(`/users/${id}/ach-push`, {
+      method: "PATCH",
+      body: JSON.stringify({ enabled }),
     }),
 
   // Marketing
