@@ -63,7 +63,7 @@ export interface User {
   referCode: string | null;
   referredByCode: string | null;
   referValue: number;
-  accountStatus: "INITIAL" | "ACTIVE" | "PENDING" | "REJECTED";
+  accountStatus: "INITIAL" | "ACTIVE" | "PENDING" | "REJECTED" | "DELETED";
   role: "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER";
   zynkEntityId: string | null;
   zynkExternalAccountId: string | null;
@@ -187,8 +187,6 @@ export interface UpdateUserPayload {
   phoneNumber?: string;
   dateOfBirth?: string;
   nationality?: string;
-  role?: "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER";
-  accountStatus?: "INITIAL" | "ACTIVE" | "PENDING" | "REJECTED";
   referValue?: number;
 }
 

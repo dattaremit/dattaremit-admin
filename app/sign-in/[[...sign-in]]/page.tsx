@@ -62,15 +62,15 @@ export default function SignInPage() {
       }
     }
 
-    console.error("No supported verification method found. Sign-in status:", signIn.status,
-      "First factors:", signIn.supportedFirstFactors,
-      "Second factors:", signIn.supportedSecondFactors);
     setError("No supported verification method found.");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoaded || !signIn) return;
+    if (!isLoaded || !signIn) {
+      setError("Authentication service is still loading. Please wait a moment and try again.");
+      return;
+    }
 
     if (!email.trim() || !password.trim()) {
       setError("Please enter your email and password");
@@ -86,8 +86,6 @@ export default function SignInPage() {
         password,
       });
 
-      console.log("Sign-in result:", result.status);
-
       if (result.status === "complete" && result.createdSessionId) {
         await completeSignIn(result.createdSessionId);
       } else if (
@@ -96,11 +94,9 @@ export default function SignInPage() {
       ) {
         await prepareEmailVerification();
       } else {
-        console.error("Unexpected sign-in status:", result.status, result);
         setError(`Unexpected sign-in status: ${result.status}`);
       }
     } catch (err: unknown) {
-      console.error("Sign-in error:", err);
       const clerkError = err as { errors?: { longMessage?: string }[] };
       setError(
         clerkError?.errors?.[0]?.longMessage ||
@@ -113,7 +109,10 @@ export default function SignInPage() {
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoaded || !signIn) return;
+    if (!isLoaded || !signIn) {
+      setError("Authentication service is still loading. Please wait a moment and try again.");
+      return;
+    }
 
     if (!code.trim()) {
       setError("Please enter the verification code");
@@ -137,19 +136,15 @@ export default function SignInPage() {
         });
       }
 
-      console.log("Verification result:", result.status);
-
       if (result.status === "complete" && result.createdSessionId) {
         await completeSignIn(result.createdSessionId);
       } else if (result.status === "needs_second_factor") {
         await prepareEmailVerification();
         setCode("");
       } else {
-        console.error("Verification incomplete:", result.status, result);
         setError("Verification could not be completed. Please try again.");
       }
     } catch (err: unknown) {
-      console.error("Verification error:", err);
       const clerkError = err as { errors?: { longMessage?: string }[] };
       setError(
         clerkError?.errors?.[0]?.longMessage ||
@@ -208,7 +203,7 @@ export default function SignInPage() {
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading || !isLoaded}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -260,7 +255,7 @@ export default function SignInPage() {
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading || !isLoaded}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (

@@ -13,13 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { api, type User } from "@/lib/api";
 
 interface EditUserDialogProps {
@@ -39,8 +32,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
   const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber);
   const [dateOfBirth, setDateOfBirth] = useState(user.dateOfBirth ? user.dateOfBirth.split("T")[0] : "");
   const [nationality, setNationality] = useState(user.nationality || "");
-  const [role, setRole] = useState<"ADMIN" | "USER" | "INFLUENCER" | "PROMOTER">(user.role);
-  const [accountStatus, setAccountStatus] = useState(user.accountStatus);
   const [referValue, setReferValue] = useState(user.referValue ?? 1);
 
   useEffect(() => {
@@ -51,8 +42,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
     setPhoneNumber(user.phoneNumber);
     setDateOfBirth(user.dateOfBirth ? user.dateOfBirth.split("T")[0] : "");
     setNationality(user.nationality || "");
-    setRole(user.role);
-    setAccountStatus(user.accountStatus);
     setReferValue(user.referValue ?? 1);
   }, [user]);
 
@@ -69,8 +58,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
         phoneNumber,
         dateOfBirth,
         nationality: nationality || undefined,
-        role,
-        accountStatus,
         referValue,
       });
 
@@ -166,37 +153,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
               value={nationality}
               onChange={(e) => setNationality(e.target.value)}
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Role</Label>
-              <Select value={role} onValueChange={(v) => setRole(v as "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER")}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USER">User</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="INFLUENCER">Influencer</SelectItem>
-                  <SelectItem value="PROMOTER">Promoter</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Account Status</Label>
-              <Select value={accountStatus} onValueChange={(v) => setAccountStatus(v as typeof accountStatus)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="INITIAL">Initial</SelectItem>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="REJECTED">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <div className="space-y-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Search, Users, Megaphone, TrendingUp } from "lucide-react";
 import {
   Card,
@@ -38,6 +39,7 @@ import { AddPromoterDialog } from "@/components/add-promoter-dialog";
 
 export default function MarketingPage() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search);
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
   const { data: stats } = useApiFetch(async () => {
@@ -57,10 +59,10 @@ export default function MarketingPage() {
   } = usePaginatedFetch<User>(
     async (page, limit) => {
       const role = roleFilter === "all" ? undefined : roleFilter;
-      const res = await api.getPromoters(page, limit, search || undefined, role);
+      const res = await api.getPromoters(page, limit, debouncedSearch || undefined, role);
       return { data: res.data.promoters ?? [], total: res.data.total };
     },
-    [search, roleFilter]
+    [debouncedSearch, roleFilter]
   );
 
   if (error) return <ErrorState message={error} />;

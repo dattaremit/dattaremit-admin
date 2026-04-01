@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Mail, Phone, Globe, Calendar, Shield, Gift, Pencil, Trash2, Zap } from "lucide-react";
@@ -51,8 +52,8 @@ export default function UserDetailPage() {
     try {
       await api.toggleAchPush(id, checked);
       refetch();
-    } catch {
-      // refetch to reset switch state
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to toggle fast transfer");
       refetch();
     } finally {
       setAchPushLoading(false);

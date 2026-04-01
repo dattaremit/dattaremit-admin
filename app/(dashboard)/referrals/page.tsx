@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { ErrorState } from "@/components/error-state";
 import { PagePagination } from "@/components/page-pagination";
 import { StatsCard } from "@/components/stats-card";
@@ -46,6 +47,7 @@ interface Referrer {
 
 export default function ReferralsPage() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search);
 
   // Stats cards + chart (no filtering needed)
   const { data: statsData, loading: statsLoading, error: statsError, refetch: statsRefetch } =
@@ -72,10 +74,10 @@ export default function ReferralsPage() {
     refetch: tableRefetch,
   } = usePaginatedFetch<Referrer>(
     async (page, limit) => {
-      const res = await api.getReferralStats(page, limit, search || undefined);
+      const res = await api.getReferralStats(page, limit, debouncedSearch || undefined);
       return { data: res.data.topReferrers, total: res.data.total };
     },
-    [search],
+    [debouncedSearch],
   );
 
   if (statsLoading) {

@@ -31,7 +31,10 @@ export default function DashboardLayout({
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const getTokenRef = useRef(getToken);
-  getTokenRef.current = getToken;
+
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
@@ -44,7 +47,6 @@ export default function DashboardLayout({
       try {
         const token = await getTokenRef.current();
         if (!token) {
-          console.error("Admin verification failed: No auth token received from Clerk");
           if (!cancelled) {
             setAuthError("No auth token received. Please sign out and sign in again.");
             setIsAdmin(false);
@@ -54,7 +56,6 @@ export default function DashboardLayout({
         await api.getDashboardStats();
         if (!cancelled) setIsAdmin(true);
       } catch (error) {
-        console.error("Admin verification failed:", error);
         if (!cancelled) {
           const message = error instanceof Error ? error.message : "Unknown error";
           setAuthError(message);

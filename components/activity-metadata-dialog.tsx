@@ -16,7 +16,11 @@ export function ActivityMetadataDialog({
   metadata: Record<string, unknown> | null;
   activityType: string;
 }) {
-  if (!metadata) return null;
+  if (!metadata || Object.keys(metadata).length === 0) {
+    return (
+      <span className="text-xs text-muted-foreground">—</span>
+    );
+  }
 
   return (
     <Dialog>

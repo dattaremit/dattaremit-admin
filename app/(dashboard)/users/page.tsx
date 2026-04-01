@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Search, Eye, MoreHorizontal, Pencil, Shield, Trash2 } from "lucide-react";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
   Card,
   CardContent,
@@ -51,10 +52,12 @@ import { ErrorState } from "@/components/error-state";
 import { EditUserDialog } from "@/components/edit-user-dialog";
 import { DeleteUserDialog } from "@/components/delete-user-dialog";
 import { ChangeRoleDialog } from "@/components/change-role-dialog";
+import { AddUserDialog } from "@/components/add-user-dialog";
 
 export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const debouncedSearch = useDebounce(search);
 
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
@@ -64,10 +67,10 @@ export default function UsersPage() {
     usePaginatedFetch<User>(
       async (page, limit) => {
         const status = statusFilter === "all" ? undefined : statusFilter;
-        const res = await api.getUsers(page, limit, search || undefined, status);
+        const res = await api.getUsers(page, limit, debouncedSearch || undefined, status);
         return { data: res.data.users ?? [], total: res.data.total };
       },
-      [search, statusFilter],
+      [debouncedSearch, statusFilter],
     );
 
   if (error) return <ErrorState message={error} />;
@@ -81,6 +84,7 @@ export default function UsersPage() {
             Manage and view all registered users
           </p>
         </div>
+        <AddUserDialog onSuccess={refetch} />
       </div>
 
       <Card>
