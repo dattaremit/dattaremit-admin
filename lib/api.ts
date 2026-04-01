@@ -68,6 +68,7 @@ export interface User {
   zynkEntityId: string | null;
   zynkExternalAccountId: string | null;
   zynkDepositAccountId: string | null;
+  indianKycStatus: "NONE" | "PENDING" | "APPROVED" | "REJECTED" | "FAILED";
   achPushEnabled: boolean;
   created_at: string;
   updated_at: string;
