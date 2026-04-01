@@ -139,6 +139,14 @@ export interface MarketingStats {
   totalPromoterReferrals: number;
 }
 
+export interface AppSettings {
+  [key: string]: {
+    value: string;
+    updatedBy: string | null;
+    updated_at: string | null;
+  };
+}
+
 export interface PaginatedResponse<T> {
   users?: T[];
   activities?: T[];
@@ -279,4 +287,14 @@ export const api = {
 
   getMarketingStats: () =>
     adminFetch<ApiResponse<MarketingStats>>("/marketing/stats"),
+
+  // Settings
+  getSettings: () =>
+    adminFetch<ApiResponse<AppSettings>>("/settings"),
+
+  updateSetting: (key: string, value: string) =>
+    adminFetch<ApiResponse<unknown>>("/settings", {
+      method: "PUT",
+      body: JSON.stringify({ key, value }),
+    }),
 };

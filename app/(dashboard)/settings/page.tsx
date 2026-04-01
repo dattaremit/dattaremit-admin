@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, Server, Bell, Shield } from "lucide-react";
+import { Save, Server, Bell, Shield, DollarSign, Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { api } from "@/lib/api";
 
 const generalFormSchema = z.object({
   apiUrl: z.string().url("Must be a valid URL"),
@@ -43,10 +45,23 @@ const notificationFormSchema = z.object({
   alertWebhookUrl: z.string().url("Must be a valid URL").or(z.literal("")),
 });
 
+const transferLimitsSchema = z.object({
+  weeklyTransferLimit: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, "Must be a valid dollar amount")
+    .refine((v) => parseFloat(v) >= 100, "Minimum limit is $100")
+    .refine((v) => parseFloat(v) <= 1000000, "Maximum limit is $1,000,000"),
+});
+
 type GeneralFormValues = z.infer<typeof generalFormSchema>;
 type NotificationFormValues = z.infer<typeof notificationFormSchema>;
+type TransferLimitsFormValues = z.infer<typeof transferLimitsSchema>;
 
 export default function SettingsPage() {
+  const [loadingSettings, setLoadingSettings] = useState(true);
+  const [savingLimits, setSavingLimits] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+
   const generalForm = useForm<GeneralFormValues>({
     resolver: zodResolver(generalFormSchema),
     defaultValues: {
@@ -67,6 +82,33 @@ export default function SettingsPage() {
     },
   });
 
+  const transferLimitsForm = useForm<TransferLimitsFormValues>({
+    resolver: zodResolver(transferLimitsSchema),
+    defaultValues: {
+      weeklyTransferLimit: "10000",
+    },
+  });
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const response = await api.getSettings();
+        const settings = response.data;
+        if (settings.WEEKLY_TRANSFER_LIMIT_USD) {
+          transferLimitsForm.reset({
+            weeklyTransferLimit: settings.WEEKLY_TRANSFER_LIMIT_USD.value,
+          });
+          setLastUpdated(settings.WEEKLY_TRANSFER_LIMIT_USD.updated_at);
+        }
+      } catch {
+        toast.error("Failed to load settings");
+      } finally {
+        setLoadingSettings(false);
+      }
+    }
+    loadSettings();
+  }, [transferLimitsForm]);
+
   function onGeneralSubmit(data: GeneralFormValues) {
     if (data.adminToken) {
       localStorage.setItem("admin_token", data.adminToken);
@@ -83,6 +125,24 @@ export default function SettingsPage() {
     });
   }
 
+  async function onTransferLimitsSubmit(data: TransferLimitsFormValues) {
+    setSavingLimits(true);
+    try {
+      await api.updateSetting(
+        "WEEKLY_TRANSFER_LIMIT_USD",
+        data.weeklyTransferLimit,
+      );
+      setLastUpdated(new Date().toISOString());
+      toast.success("Transfer limits saved", {
+        description: `Weekly transfer limit set to $${parseFloat(data.weeklyTransferLimit).toLocaleString()}.`,
+      });
+    } catch {
+      toast.error("Failed to save transfer limits");
+    } finally {
+      setSavingLimits(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -95,6 +155,7 @@ export default function SettingsPage() {
       <Tabs defaultValue="general">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="transfer-limits">Transfer Limits</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
@@ -185,6 +246,74 @@ export default function SettingsPage() {
                   </Button>
                 </form>
               </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="transfer-limits" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Transfer Limits
+              </CardTitle>
+              <CardDescription>
+                Configure transfer limits applied to all users
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingSettings ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <Form {...transferLimitsForm}>
+                  <form
+                    onSubmit={transferLimitsForm.handleSubmit(
+                      onTransferLimitsSubmit,
+                    )}
+                    className="space-y-6"
+                  >
+                    <FormField
+                      control={transferLimitsForm.control}
+                      name="weeklyTransferLimit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Weekly Transfer Limit (USD)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="10000"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Maximum total amount a user can transfer in a rolling
+                            7-day window. Minimum: $100, Maximum: $1,000,000.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {lastUpdated && (
+                      <p className="text-xs text-muted-foreground">
+                        Last updated:{" "}
+                        {new Date(lastUpdated).toLocaleString()}
+                      </p>
+                    )}
+
+                    <Button type="submit" disabled={savingLimits}>
+                      {savingLimits ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="mr-2 h-4 w-4" />
+                      )}
+                      Save Transfer Limits
+                    </Button>
+                  </form>
+                </Form>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -340,7 +469,7 @@ export default function SettingsPage() {
                 <AlertDescription>
                   The admin dashboard uses token-based authentication. The admin
                   token is stored in your browser&apos;s local storage and sent with
-                  every API request via the <code>x-admin-token</code> header.
+                  every API request via the <code>x-auth-token</code> header.
                 </AlertDescription>
               </Alert>
 
