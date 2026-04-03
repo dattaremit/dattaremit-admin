@@ -13,3 +13,7 @@ export function formatDate(dateStr: string): string {
 export function formatMonthShort(dateStr: string): string {
   return format(new Date(dateStr), "MMM ''yy")
 }
+
+export function formatActivityType(type: string): string {
+  return type.replace(/_/g, " ")
+}

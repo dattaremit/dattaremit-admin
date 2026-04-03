@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/tooltip";
 import { api, type Activity } from "@/lib/api";
 import { STATUS_BADGE_VARIANT, ACTIVITY_TYPES } from "@/lib/constants";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatActivityType } from "@/lib/utils";
 import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
 import { PagePagination } from "@/components/page-pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
@@ -84,7 +84,7 @@ export default function ActivitiesPage() {
                 <SelectItem value="all">All Types</SelectItem>
                 {ACTIVITY_TYPES.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {type.replace(/_/g, " ")}
+                    {formatActivityType(type)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -161,7 +161,7 @@ export default function ActivitiesPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-xs">
-                            {activity.type.replace(/_/g, " ")}
+                            {activity.formatActivityType(type)}
                           </Badge>
                         </TableCell>
                         <TableCell>
