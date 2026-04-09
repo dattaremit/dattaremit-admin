@@ -24,10 +24,10 @@ interface Activity {
   id: string;
   type: string;
   status: string;
-  description?: string;
-  amount?: string;
+  description?: string | null;
+  amount?: string | null;
   created_at: string;
-  metadata?: unknown;
+  metadata?: Record<string, unknown> | null;
 }
 
 interface UserActivityHistoryProps {
@@ -77,7 +77,7 @@ export function UserActivityHistory({ activities }: UserActivityHistoryProps) {
                     </TableCell>
                     <TableCell>
                       <ActivityMetadataDialog
-                        metadata={activity.metadata}
+                        metadata={activity.metadata ?? null}
                         activityType={activity.type}
                       />
                     </TableCell>

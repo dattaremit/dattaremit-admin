@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneralSettingsForm } from "@/components/settings/general-settings-form";
 import { NotificationSettingsForm } from "@/components/settings/notification-settings-form";
 import { TransferLimitsForm } from "@/components/settings/transfer-limits-form";
+import { WaitlistSettingsForm } from "@/components/settings/waitlist-settings-form";
 
 export default function SettingsPage() {
   return (
@@ -30,6 +31,7 @@ export default function SettingsPage() {
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="transfer-limits">Transfer Limits</TabsTrigger>
+          <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
@@ -40,6 +42,10 @@ export default function SettingsPage() {
 
         <TabsContent value="transfer-limits" className="space-y-6">
           <TransferLimitsForm />
+        </TabsContent>
+
+        <TabsContent value="waitlist" className="space-y-6">
+          <WaitlistSettingsForm />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">

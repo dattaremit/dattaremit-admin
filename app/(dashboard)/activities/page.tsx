@@ -161,7 +161,7 @@ export default function ActivitiesPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-xs">
-                            {activity.formatActivityType(type)}
+                            {formatActivityType(activity.type)}
                           </Badge>
                         </TableCell>
                         <TableCell>
