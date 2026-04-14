@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Hourglass, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Hourglass, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Card,
@@ -12,9 +13,10 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 
-export function WaitlistSettingsForm() {
+export function AccessControlSettingsForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [enabled, setEnabled] = useState(false);
@@ -43,19 +45,18 @@ export function WaitlistSettingsForm() {
     const previous = enabled;
     setEnabled(checked);
     try {
-      await api.updateSetting("WAITLIST_ENABLED", checked ? "true" : "false");
+      await api.setWaitlistEnabled(checked);
       setLastUpdated(new Date().toISOString());
-      toast.success(
-        checked ? "Waitlist enabled" : "Waitlist disabled",
-        {
-          description: checked
-            ? "New signups will land on the waitlist screen until you disable this."
-            : "All waitlisted users are now released and can continue onboarding.",
-        },
-      );
-    } catch {
+      toast.success(checked ? "Waitlist enabled" : "Waitlist disabled", {
+        description: checked
+          ? "New signups are gated behind the waitlist. Add emails to the allowlist to let specific people through."
+          : "All signups pass — except emails on the blocklist.",
+      });
+    } catch (err) {
       setEnabled(previous);
-      toast.error("Failed to update waitlist setting");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update setting",
+      );
     } finally {
       setSaving(false);
     }
@@ -69,8 +70,9 @@ export function WaitlistSettingsForm() {
           Waitlist
         </CardTitle>
         <CardDescription>
-          Gate new signups behind a waitlist screen. Toggling off immediately
-          releases everyone currently on the waitlist.
+          When enabled, new signups see the waitlist screen. Emails on the
+          allowlist bypass the waitlist. Emails on the blocklist are always
+          blocked, even when the waitlist is off.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -84,8 +86,7 @@ export function WaitlistSettingsForm() {
               <div className="space-y-0.5">
                 <Label htmlFor="waitlist-enabled">Waitlist mode</Label>
                 <p className="text-sm text-muted-foreground">
-                  When enabled, users who complete signup see the waitlist
-                  screen instead of onboarding.
+                  Gate new signups behind the waitlist screen.
                 </p>
               </div>
               <Switch
@@ -95,6 +96,13 @@ export function WaitlistSettingsForm() {
                 onCheckedChange={onToggle}
               />
             </div>
+
+            <Button asChild variant="outline" size="sm">
+              <Link href="/access-control">
+                Manage blocklist & allowlist
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
 
             {lastUpdated && (
               <p className="text-xs text-muted-foreground">

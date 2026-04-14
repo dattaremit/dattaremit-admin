@@ -148,6 +148,25 @@ export interface AppSettings {
   };
 }
 
+export type AccessListType = "BLOCKLIST" | "ALLOWLIST";
+
+export interface AccessControlEntry {
+  id: string;
+  email: string;
+  listType: AccessListType;
+  reason: string | null;
+  createdBy: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AccessControlListResponse {
+  entries: AccessControlEntry[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export interface PaginatedResponse<T> {
   users?: T[];
   activities?: T[];
@@ -297,5 +316,47 @@ export const api = {
     adminFetch<ApiResponse<unknown>>("/settings", {
       method: "PUT",
       body: JSON.stringify({ key, value }),
+    }),
+
+  // Access control
+  getAccessControlList: (
+    listType: AccessListType,
+    page = 1,
+    limit = 20,
+    search?: string,
+  ) => {
+    const params = new URLSearchParams({
+      listType,
+      page: String(page),
+      limit: String(limit),
+    });
+    if (search) params.set("search", search);
+    return adminFetch<ApiResponse<AccessControlListResponse>>(
+      `/access-control?${params}`,
+    );
+  },
+
+  addAccessControlEmail: (payload: {
+    email: string;
+    listType: AccessListType;
+    reason?: string;
+  }) =>
+    adminFetch<ApiResponse<AccessControlEntry>>("/access-control", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  removeAccessControlEmail: (id: string) =>
+    adminFetch<ApiResponse<void>>(`/access-control/${id}`, {
+      method: "DELETE",
+    }),
+
+  setWaitlistEnabled: (enabled: boolean) =>
+    adminFetch<ApiResponse<unknown>>("/settings", {
+      method: "PUT",
+      body: JSON.stringify({
+        key: "WAITLIST_ENABLED",
+        value: enabled ? "true" : "false",
+      }),
     }),
 };

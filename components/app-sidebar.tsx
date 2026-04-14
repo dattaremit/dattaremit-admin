@@ -12,6 +12,7 @@ import {
   LogOut,
   Gift,
   Megaphone,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,6 +34,7 @@ const navItems = [
   { title: "Activities", href: "/activities", icon: Activity },
   { title: "Marketing", href: "/marketing", icon: Megaphone },
   { title: "Referrals", href: "/referrals", icon: Gift },
+  { title: "Access Control", href: "/access-control", icon: ShieldCheck },
   { title: "Settings", href: "/settings", icon: Settings },
 ];
 
