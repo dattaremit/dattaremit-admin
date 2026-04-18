@@ -32,18 +32,18 @@ export default function UserDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [changeRoleOpen, setChangeRoleOpen] = useState(false);
-  const [achPushLoading, setAchPushLoading] = useState(false);
+  const [instantTransferLoading, setInstantTransferLoading] = useState(false);
 
-  async function handleAchPushToggle(checked: boolean) {
-    setAchPushLoading(true);
+  async function handleInstantTransferToggle(checked: boolean) {
+    setInstantTransferLoading(true);
     try {
-      await api.toggleAchPush(id, checked);
+      await api.toggleInstantTransfer(id, checked);
       refetch();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to toggle fast transfer");
+      toast.error(err instanceof Error ? err.message : "Failed to toggle instant transfer");
       refetch();
     } finally {
-      setAchPushLoading(false);
+      setInstantTransferLoading(false);
     }
   }
 
@@ -146,8 +146,8 @@ export default function UserDetailPage() {
         <TabsContent value="profile" className="space-y-6">
           <UserProfile
             user={user}
-            achPushLoading={achPushLoading}
-            onAchPushToggle={handleAchPushToggle}
+            instantTransferLoading={instantTransferLoading}
+            onInstantTransferToggle={handleInstantTransferToggle}
           />
         </TabsContent>
 

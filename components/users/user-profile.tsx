@@ -24,16 +24,16 @@ interface UserProfileProps {
     referCode?: string | null;
     referredByCode?: string | null;
     referValue?: number;
-    achPushEnabled: boolean;
+    instantTransfer: boolean;
     created_at: string;
     clerkUserId: string;
     zynkEntityId?: string | null;
   };
-  achPushLoading: boolean;
-  onAchPushToggle: (checked: boolean) => void;
+  instantTransferLoading: boolean;
+  onInstantTransferToggle: (checked: boolean) => void;
 }
 
-export function UserProfile({ user, achPushLoading, onAchPushToggle }: UserProfileProps) {
+export function UserProfile({ user, instantTransferLoading, onInstantTransferToggle }: UserProfileProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Personal Info */}
@@ -104,18 +104,18 @@ export function UserProfile({ user, achPushLoading, onAchPushToggle }: UserProfi
             <div className="flex items-center gap-3">
               <Zap className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">Fast Transfer (ACH Push)</p>
+                <p className="text-sm font-medium">Instant Transfer</p>
                 <p className="text-xs text-muted-foreground">
-                  {user.achPushEnabled
-                    ? "User can select fast ACH push transfers"
-                    : "User limited to regular ACH pull transfers"}
+                  {user.instantTransfer
+                    ? "Counterparty risk acknowledged for instant transfers"
+                    : "Standard transfer settlement"}
                 </p>
               </div>
             </div>
             <Switch
-              checked={user.achPushEnabled}
-              onCheckedChange={onAchPushToggle}
-              disabled={achPushLoading}
+              checked={user.instantTransfer}
+              onCheckedChange={onInstantTransferToggle}
+              disabled={instantTransferLoading}
             />
           </div>
           <Separator />

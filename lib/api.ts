@@ -69,7 +69,7 @@ export interface User {
   zynkExternalAccountId: string | null;
   zynkDepositAccountId: string | null;
   indianKycStatus: "NONE" | "PENDING" | "APPROVED" | "REJECTED" | "FAILED";
-  achPushEnabled: boolean;
+  instantTransfer: boolean;
   created_at: string;
   updated_at: string;
   addresses?: Address[];
@@ -280,8 +280,8 @@ export const api = {
       body: JSON.stringify({ role }),
     }),
 
-  toggleAchPush: (id: string, enabled: boolean) =>
-    adminFetch<ApiResponse<User>>(`/users/${id}/ach-push`, {
+  toggleInstantTransfer: (id: string, enabled: boolean) =>
+    adminFetch<ApiResponse<User>>(`/users/${id}/instant-transfer`, {
       method: "PATCH",
       body: JSON.stringify({ enabled }),
     }),
