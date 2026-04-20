@@ -34,7 +34,7 @@ import {
 import { api, type Activity } from "@/lib/api";
 import { STATUS_BADGE_VARIANT, ACTIVITY_TYPES } from "@/lib/constants";
 import { formatDate, formatActivityType } from "@/lib/utils";
-import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
+import { useFilteredTable } from "@/hooks/use-filtered-table";
 import { PagePagination } from "@/components/page-pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { ActivityMetadataDialog } from "@/components/activity-metadata-dialog";
@@ -45,14 +45,12 @@ export default function ActivitiesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { data: activities, total, page, setPage, totalPages, loading, error } =
-    usePaginatedFetch<Activity>(
-      async (page, limit) => {
-        const type = typeFilter === "all" ? undefined : typeFilter;
-        const status = statusFilter === "all" ? undefined : statusFilter;
+    useFilteredTable<Activity, { type?: string; status?: string }>(
+      async (page, limit, { type, status }) => {
         const res = await api.getActivities(page, limit, type, status);
         return { data: res.data.activities ?? [], total: res.data.total };
       },
-      [typeFilter, statusFilter],
+      { type: typeFilter, status: statusFilter },
     );
 
   if (error) return <ErrorState message={error} />;

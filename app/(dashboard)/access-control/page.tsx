@@ -30,8 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useDebounce } from "@/hooks/use-debounce";
-import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
+import { useFilteredTable } from "@/hooks/use-filtered-table";
 import { PagePagination } from "@/components/page-pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { ErrorState } from "@/components/error-state";
@@ -180,7 +179,6 @@ function AccessControlTable({
   description: string;
 }) {
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search);
   const [removeEntry, setRemoveEntry] = useState<AccessControlEntry | null>(
     null,
   );
@@ -194,17 +192,12 @@ function AccessControlTable({
     loading,
     error,
     refetch,
-  } = usePaginatedFetch<AccessControlEntry>(
-    async (page, limit) => {
-      const res = await api.getAccessControlList(
-        listType,
-        page,
-        limit,
-        debouncedSearch || undefined,
-      );
+  } = useFilteredTable<AccessControlEntry, { search?: string; listType: AccessListType }>(
+    async (page, limit, { search, listType }) => {
+      const res = await api.getAccessControlList(listType, page, limit, search);
       return { data: res.data.entries, total: res.data.total };
     },
-    [debouncedSearch, listType],
+    { search, listType },
   );
 
   const label = listType === "BLOCKLIST" ? "Blocklist" : "Allowlist";

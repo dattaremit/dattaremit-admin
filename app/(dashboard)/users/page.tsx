@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Search, Eye, MoreHorizontal, Pencil, Shield, Trash2 } from "lucide-react";
-import { useDebounce } from "@/hooks/use-debounce";
 import {
   Card,
   CardContent,
@@ -45,7 +44,7 @@ import {
 import { api, type User } from "@/lib/api";
 import { STATUS_BADGE_VARIANT } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
-import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
+import { useFilteredTable } from "@/hooks/use-filtered-table";
 import { PagePagination } from "@/components/page-pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { ErrorState } from "@/components/error-state";
@@ -57,20 +56,18 @@ import { AddUserDialog } from "@/components/add-user-dialog";
 export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const debouncedSearch = useDebounce(search);
 
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [changeRoleUser, setChangeRoleUser] = useState<User | null>(null);
 
   const { data: users, total, page, setPage, totalPages, loading, error, refetch } =
-    usePaginatedFetch<User>(
-      async (page, limit) => {
-        const status = statusFilter === "all" ? undefined : statusFilter;
-        const res = await api.getUsers(page, limit, debouncedSearch || undefined, status);
+    useFilteredTable<User, { search?: string; status?: string }>(
+      async (page, limit, { search, status }) => {
+        const res = await api.getUsers(page, limit, search, status);
         return { data: res.data.users ?? [], total: res.data.total };
       },
-      [debouncedSearch, statusFilter],
+      { search, status: statusFilter },
     );
 
   if (error) return <ErrorState message={error} />;

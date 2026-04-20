@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useDebounce } from "@/hooks/use-debounce";
 import { ErrorState } from "@/components/error-state";
 import { PagePagination } from "@/components/page-pagination";
 import { StatsCard } from "@/components/stats-card";
@@ -27,7 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useApiFetch } from "@/hooks/use-api-fetch";
-import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
+import { useFilteredTable } from "@/hooks/use-filtered-table";
 import { api, type DashboardStats } from "@/lib/api";
 import { Gift, Search, TrendingUp, Trophy, Users } from "lucide-react";
 import Link from "next/link";
@@ -47,7 +46,6 @@ interface Referrer {
 
 export default function ReferralsPage() {
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search);
 
   // Stats cards + chart (no filtering needed)
   const { data: statsData, loading: statsLoading, error: statsError, refetch: statsRefetch } =
@@ -72,12 +70,12 @@ export default function ReferralsPage() {
     loading: tableLoading,
     error: tableError,
     refetch: tableRefetch,
-  } = usePaginatedFetch<Referrer>(
-    async (page, limit) => {
-      const res = await api.getReferralStats(page, limit, debouncedSearch || undefined);
+  } = useFilteredTable<Referrer, { search?: string }>(
+    async (page, limit, { search }) => {
+      const res = await api.getReferralStats(page, limit, search);
       return { data: res.data.topReferrers, total: res.data.total };
     },
-    [debouncedSearch],
+    { search },
   );
 
   if (statsLoading) {

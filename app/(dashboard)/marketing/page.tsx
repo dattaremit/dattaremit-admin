@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useDebounce } from "@/hooks/use-debounce";
 import { Search, Users, Megaphone, TrendingUp } from "lucide-react";
 import {
   Card,
@@ -30,7 +29,7 @@ import {
 import { api, type User } from "@/lib/api";
 import { ROLE_BADGE_VARIANT } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
-import { usePaginatedFetch } from "@/hooks/use-paginated-fetch";
+import { useFilteredTable } from "@/hooks/use-filtered-table";
 import { useApiFetch } from "@/hooks/use-api-fetch";
 import { PagePagination } from "@/components/page-pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
@@ -39,7 +38,6 @@ import { AddPromoterDialog } from "@/components/add-promoter-dialog";
 
 export default function MarketingPage() {
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search);
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
   const { data: stats } = useApiFetch(async () => {
@@ -56,13 +54,12 @@ export default function MarketingPage() {
     loading,
     error,
     refetch,
-  } = usePaginatedFetch<User>(
-    async (page, limit) => {
-      const role = roleFilter === "all" ? undefined : roleFilter;
-      const res = await api.getPromoters(page, limit, debouncedSearch || undefined, role);
+  } = useFilteredTable<User, { search?: string; role?: string }>(
+    async (page, limit, { search, role }) => {
+      const res = await api.getPromoters(page, limit, search, role);
       return { data: res.data.promoters ?? [], total: res.data.total };
     },
-    [debouncedSearch, roleFilter]
+    { search, role: roleFilter },
   );
 
   if (error) return <ErrorState message={error} />;
