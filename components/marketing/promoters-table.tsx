@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -12,6 +11,8 @@ import {
 import { type User } from "@/lib/api";
 import { ROLE_BADGE_VARIANT } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
+import { StatusBadge } from "@/components/table/status-badge";
+import { EmptyTableRow } from "@/components/table/empty-table-row";
 
 interface PromotersTableProps {
   promoters: User[];
@@ -33,11 +34,7 @@ export function PromotersTable({ promoters }: PromotersTableProps) {
         </TableHeader>
         <TableBody>
           {promoters.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
-                No promoters found
-              </TableCell>
-            </TableRow>
+            <EmptyTableRow colSpan={6}>No promoters found</EmptyTableRow>
           ) : (
             promoters.map((user) => (
               <TableRow key={user.id}>
@@ -48,9 +45,7 @@ export function PromotersTable({ promoters }: PromotersTableProps) {
                   {user.email}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={ROLE_BADGE_VARIANT[user.role] ?? "outline"}>
-                    {user.role}
-                  </Badge>
+                  <StatusBadge value={user.role} variants={ROLE_BADGE_VARIANT} />
                 </TableCell>
                 <TableCell>
                   {user.referCode ? (

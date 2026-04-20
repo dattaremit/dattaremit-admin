@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { Eye, MoreHorizontal, Pencil, Shield, Trash2 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,6 +26,9 @@ import {
 import { type User } from "@/lib/api";
 import { STATUS_BADGE_VARIANT } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
+import { UserAvatarCell } from "@/components/table/user-avatar-cell";
+import { StatusBadge } from "@/components/table/status-badge";
+import { EmptyTableRow } from "@/components/table/empty-table-row";
 
 interface UsersTableProps {
   users: User[];
@@ -53,26 +54,15 @@ export function UsersTable({ users, onEdit, onChangeRole, onDelete }: UsersTable
         </TableHeader>
         <TableBody>
           {users.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center">
-                No users found
-              </TableCell>
-            </TableRow>
+            <EmptyTableRow colSpan={7}>No users found</EmptyTableRow>
           ) : (
             users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="text-xs">
-                        {user.firstName?.[0]}
-                        {user.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">
-                      {user.firstName} {user.lastName}
-                    </span>
-                  </div>
+                  <UserAvatarCell
+                    firstName={user.firstName}
+                    lastName={user.lastName}
+                  />
                 </TableCell>
                 <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
                   {user.email}
@@ -82,9 +72,10 @@ export function UsersTable({ users, onEdit, onChangeRole, onDelete }: UsersTable
                   {user.phoneNumber}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={STATUS_BADGE_VARIANT[user.accountStatus] ?? "outline"}>
-                    {user.accountStatus}
-                  </Badge>
+                  <StatusBadge
+                    value={user.accountStatus}
+                    variants={STATUS_BADGE_VARIANT}
+                  />
                 </TableCell>
                 <TableCell>
                   {user.referCode ? (

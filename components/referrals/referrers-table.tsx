@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { Users } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -12,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { UserAvatarCell } from "@/components/table/user-avatar-cell";
 
 export interface Referrer {
   id: string;
@@ -74,20 +73,11 @@ export function ReferrersTable({
                 </Badge>
               </TableCell>
               <TableCell>
-                <Link
+                <UserAvatarCell
+                  firstName={referrer.firstName}
+                  lastName={referrer.lastName}
                   href={`/users/${referrer.id}`}
-                  className="flex items-center gap-3 hover:underline"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="text-xs">
-                      {referrer.firstName?.[0]}
-                      {referrer.lastName?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium">
-                    {referrer.firstName} {referrer.lastName}
-                  </span>
-                </Link>
+                />
               </TableCell>
               <TableCell>
                 <code className="rounded bg-muted px-2 py-1 text-xs">

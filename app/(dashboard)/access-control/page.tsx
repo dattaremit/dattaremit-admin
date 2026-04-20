@@ -36,6 +36,7 @@ import { TableSkeleton } from "@/components/table-skeleton";
 import { ErrorState } from "@/components/error-state";
 import { AddAccessControlEmailDialog } from "@/components/access-control/add-access-control-email-dialog";
 import { RemoveAccessControlEmailDialog } from "@/components/access-control/remove-access-control-email-dialog";
+import { EmptyTableRow } from "@/components/table/empty-table-row";
 import { api, type AccessControlEntry, type AccessListType } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 
@@ -248,11 +249,7 @@ function AccessControlTable({
               </TableHeader>
               <TableBody>
                 {entries.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
-                      No entries
-                    </TableCell>
-                  </TableRow>
+                  <EmptyTableRow colSpan={4}>No entries</EmptyTableRow>
                 ) : (
                   entries.map((entry) => (
                     <TableRow key={entry.id}>

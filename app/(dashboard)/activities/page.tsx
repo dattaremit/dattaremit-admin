@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -10,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -26,11 +24,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { api, type Activity } from "@/lib/api";
 import { STATUS_BADGE_VARIANT, ACTIVITY_TYPES } from "@/lib/constants";
 import { formatDate, formatActivityType } from "@/lib/utils";
@@ -39,6 +32,9 @@ import { PagePagination } from "@/components/page-pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { ActivityMetadataDialog } from "@/components/activity-metadata-dialog";
 import { ErrorState } from "@/components/error-state";
+import { UserAvatarCell } from "@/components/table/user-avatar-cell";
+import { StatusBadge } from "@/components/table/status-badge";
+import { EmptyTableRow } from "@/components/table/empty-table-row";
 
 export default function ActivitiesPage() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -72,7 +68,6 @@ export default function ActivitiesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Filters */}
           <div className="flex flex-col gap-3 sm:flex-row">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-full sm:w-[220px]">
@@ -100,7 +95,6 @@ export default function ActivitiesPage() {
             </Select>
           </div>
 
-          {/* Table */}
           {loading ? (
             <TableSkeleton />
           ) : (
@@ -119,38 +113,19 @@ export default function ActivitiesPage() {
                 </TableHeader>
                 <TableBody>
                   {activities.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center">
-                        No activities found
-                      </TableCell>
-                    </TableRow>
+                    <EmptyTableRow colSpan={7}>No activities found</EmptyTableRow>
                   ) : (
                     activities.map((activity) => (
                       <TableRow key={activity.id}>
                         <TableCell>
                           {activity.user ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Link
-                                  href={`/users/${activity.userId}`}
-                                  className="flex items-center gap-2 hover:underline"
-                                >
-                                  <Avatar className="h-7 w-7">
-                                    <AvatarFallback className="text-xs">
-                                      {activity.user.firstName?.[0]}
-                                      {activity.user.lastName?.[0]}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="text-sm">
-                                    {activity.user.firstName}{" "}
-                                    {activity.user.lastName}
-                                  </span>
-                                </Link>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {activity.user.email}
-                              </TooltipContent>
-                            </Tooltip>
+                            <UserAvatarCell
+                              firstName={activity.user.firstName}
+                              lastName={activity.user.lastName}
+                              href={`/users/${activity.userId}`}
+                              tooltip={activity.user.email}
+                              avatarSize="sm"
+                            />
                           ) : (
                             <span className="text-sm text-muted-foreground">
                               Unknown
@@ -163,9 +138,10 @@ export default function ActivitiesPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={STATUS_BADGE_VARIANT[activity.status] ?? "outline"}>
-                            {activity.status}
-                          </Badge>
+                          <StatusBadge
+                            value={activity.status}
+                            variants={STATUS_BADGE_VARIANT}
+                          />
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
                           {activity.description || "-"}
