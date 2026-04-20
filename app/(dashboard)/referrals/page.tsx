@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Search } from "lucide-react";
 import { ErrorState } from "@/components/error-state";
 import { PagePagination } from "@/components/page-pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
+import { SearchInput } from "@/components/search-input";
 import {
   Card,
   CardContent,
@@ -12,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApiFetch } from "@/hooks/use-api-fetch";
 import { useFilteredTable } from "@/hooks/use-filtered-table";
@@ -111,15 +110,11 @@ export default function ReferralsPage() {
           <CardDescription>Detailed breakdown of top referrers</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, email, or referral code..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search by name, email, or referral code..."
+          />
 
           {tableError ? (
             <ErrorState message={tableError} onRetry={tableRefetch} />

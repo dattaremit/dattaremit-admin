@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Trash2, Hourglass, Info, Ban, UserCheck } from "lucide-react";
+import { Trash2, Hourglass, Info, Ban, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   Card,
@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -37,6 +36,7 @@ import { ErrorState } from "@/components/error-state";
 import { AddAccessControlEmailDialog } from "@/components/access-control/add-access-control-email-dialog";
 import { RemoveAccessControlEmailDialog } from "@/components/access-control/remove-access-control-email-dialog";
 import { EmptyTableRow } from "@/components/table/empty-table-row";
+import { SearchInput } from "@/components/search-input";
 import { api, type AccessControlEntry, type AccessListType } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 
@@ -224,15 +224,11 @@ function AccessControlTable({
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search by email (exact match)..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search by email (exact match)..."
+        />
 
         {loading ? (
           <TableSkeleton />

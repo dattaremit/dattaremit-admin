@@ -1,7 +1,5 @@
 "use client";
 
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -9,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SearchInput } from "@/components/search-input";
 
 interface UsersFiltersProps {
   search: string;
@@ -25,15 +24,12 @@ export function UsersFilters({
 }: UsersFiltersProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search by name..."
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9"
-        />
-      </div>
+      <SearchInput
+        value={search}
+        onChange={onSearchChange}
+        placeholder="Search by name..."
+        className="flex-1"
+      />
       <Select value={status} onValueChange={onStatusChange}>
         <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder="Filter by status" />
