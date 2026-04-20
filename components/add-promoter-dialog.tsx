@@ -25,6 +25,10 @@ import {
 import { api } from "@/lib/api";
 import { UserIdentityFields } from "@/components/users/user-identity-fields";
 import { useUserIdentityForm } from "@/hooks/use-user-identity-form";
+import {
+  userIdentitySchema,
+  referValueSchema,
+} from "@/schemas/user-identity.schema";
 
 interface AddPromoterDialogProps {
   onSuccess: () => void;
@@ -66,14 +70,26 @@ export function AddPromoterDialog({ onSuccess }: AddPromoterDialogProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const parsed = userIdentitySchema.safeParse(values);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Invalid details");
+      return;
+    }
+    const parsedRefer = referValueSchema.safeParse(referValue);
+    if (!parsedRefer.success) {
+      toast.error(parsedRefer.error.issues[0]?.message ?? "Invalid refer value");
+      return;
+    }
+
     setLoading(true);
 
     try {
       await api.createPromoter({
-        ...values,
-        nationality: values.nationality || undefined,
+        ...parsed.data,
+        nationality: parsed.data.nationality || undefined,
         role,
-        referValue,
+        referValue: parsedRefer.data,
       });
 
       toast.success("Promoter created successfully");
@@ -146,7 +162,10 @@ export function AddPromoterDialog({ onSuccess }: AddPromoterDialogProps) {
                 type="number"
                 min={1}
                 value={referValue}
-                onChange={(e) => setReferValue(parseInt(e.target.value) || 1)}
+                onChange={(e) => {
+                  const n = parseInt(e.target.value, 10);
+                  setReferValue(Number.isFinite(n) && n >= 1 ? n : 1);
+                }}
                 required
               />
             </div>

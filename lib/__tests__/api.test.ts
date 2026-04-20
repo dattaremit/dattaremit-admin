@@ -164,13 +164,13 @@ describe("api client", () => {
     it("should PUT with key and value", async () => {
       mockResponse({ success: true });
 
-      await api.updateSetting("weekly_limit", "5000");
+      await api.updateSetting("WEEKLY_TRANSFER_LIMIT_USD", "5000");
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/admin/settings"),
         expect.objectContaining({
           method: "PUT",
-          body: JSON.stringify({ key: "weekly_limit", value: "5000" }),
+          body: JSON.stringify({ key: "WEEKLY_TRANSFER_LIMIT_USD", value: "5000" }),
         }),
       );
     });

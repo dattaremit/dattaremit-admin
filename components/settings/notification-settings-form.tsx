@@ -48,10 +48,10 @@ export function NotificationSettingsForm() {
     },
   });
 
-  function onSubmit(data: NotificationFormValues) {
-    localStorage.setItem("notification_settings", JSON.stringify(data));
-    toast.success("Notification settings saved", {
-      description: "Your notification preferences have been updated.",
+  function onSubmit(_data: NotificationFormValues) {
+    toast.info("Notification persistence is not wired up yet", {
+      description:
+        "Backend endpoints for these keys are not available. Changes are not saved.",
     });
   }
 

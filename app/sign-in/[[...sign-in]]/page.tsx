@@ -17,6 +17,8 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LogIn, Loader2, ArrowLeft } from "lucide-react";
 
+const MAX_BACKOFF_MS = 30_000;
+
 export default function SignInPage() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
@@ -26,6 +28,8 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [nextAllowedAt, setNextAllowedAt] = useState(0);
 
   const completeSignIn = async (sessionId: string) => {
     if (!setActive) return;
@@ -72,6 +76,12 @@ export default function SignInPage() {
       return;
     }
 
+    if (Date.now() < nextAllowedAt) {
+      const secs = Math.ceil((nextAllowedAt - Date.now()) / 1000);
+      setError(`Too many attempts. Try again in ${secs}s.`);
+      return;
+    }
+
     if (!email.trim() || !password.trim()) {
       setError("Please enter your email and password");
       return;
@@ -87,6 +97,8 @@ export default function SignInPage() {
       });
 
       if (result.status === "complete" && result.createdSessionId) {
+        setFailedAttempts(0);
+        setNextAllowedAt(0);
         await completeSignIn(result.createdSessionId);
       } else if (
         result.status === "needs_first_factor" ||
@@ -94,10 +106,16 @@ export default function SignInPage() {
       ) {
         await prepareEmailVerification();
       } else {
-        setError(`Unexpected sign-in status: ${result.status}`);
+        console.error("Unexpected sign-in status:", result.status);
+        setError("An unexpected error occurred during sign-in. Please try again.");
       }
     } catch (err: unknown) {
       const clerkError = err as { errors?: { longMessage?: string }[] };
+      const nextFails = failedAttempts + 1;
+      setFailedAttempts(nextFails);
+      setNextAllowedAt(
+        Date.now() + Math.min(MAX_BACKOFF_MS, 2 ** nextFails * 1000),
+      );
       setError(
         clerkError?.errors?.[0]?.longMessage ||
           "Invalid email or password. Please try again."
@@ -190,6 +208,8 @@ export default function SignInPage() {
                   id="code"
                   type="text"
                   inputMode="numeric"
+                  maxLength={6}
+                  autoComplete="one-time-code"
                   placeholder="Enter 6-digit code"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}

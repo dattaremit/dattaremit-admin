@@ -1,4 +1,33 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+function assertApiBaseUrl(): string {
+  if (!API_BASE_URL) {
+    throw new Error("NEXT_PUBLIC_API_URL is required");
+  }
+  if (
+    process.env.NODE_ENV === "production" &&
+    typeof window !== "undefined" &&
+    window.location.protocol === "https:" &&
+    !API_BASE_URL.startsWith("https://")
+  ) {
+    throw new Error("NEXT_PUBLIC_API_URL must use HTTPS in production");
+  }
+  return API_BASE_URL;
+}
+
+const DEFAULT_TIMEOUT_MS = 30_000;
+
+function safeErrorMessage(status: number): string {
+  if (status === 401) return "Your session has expired. Please sign in again.";
+  if (status === 403) return "You don't have permission to do that.";
+  if (status === 404) return "We couldn't find what you were looking for.";
+  if (status === 409) return "This request conflicts with an existing record.";
+  if (status === 422) return "Some of the information you entered isn't valid.";
+  if (status === 429) return "Too many requests. Please wait a moment.";
+  if (status >= 500) return "A server error occurred. Please try again later.";
+  if (status >= 400) return "Invalid request. Please check your details.";
+  return "An unexpected error occurred. Please try again.";
+}
 
 let getAuthToken: (() => Promise<string | null>) | null = null;
 
@@ -6,32 +35,42 @@ export function setTokenGetter(getter: () => Promise<string | null>) {
   getAuthToken = getter;
 }
 
-async function adminFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function adminFetch<T>(
+  endpoint: string,
+  options?: RequestInit,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): Promise<T> {
   const token = getAuthToken ? await getAuthToken() : null;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  const res = await fetch(`${API_BASE_URL}/admin${endpoint}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { "x-auth-token": token } : {}),
-      ...options?.headers,
-    },
-  });
+  try {
+    const baseUrl = assertApiBaseUrl();
+    const res = await fetch(`${baseUrl}/admin${endpoint}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "x-auth-token": token } : {}),
+        ...options?.headers,
+      },
+    });
 
-  if (res.status === 401) {
-    throw new Error("Unauthorized");
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      console.error("API error", res.status, body);
+      throw new Error(safeErrorMessage(res.status));
+    }
+
+    return res.json();
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error("The request took too long. Please try again.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  if (res.status === 403) {
-    throw new Error("Forbidden");
-  }
-
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({ message: "Request failed" }));
-    throw new Error(data.message || `HTTP ${res.status}`);
-  }
-
-  return res.json();
 }
 
 export interface ApiResponse<T> {
@@ -139,6 +178,15 @@ export interface MarketingStats {
   totalPromoters: number;
   totalPromoterReferrals: number;
 }
+
+export type SettingsKey =
+  | "WEEKLY_TRANSFER_LIMIT_USD"
+  | "WAITLIST_ENABLED"
+  | "NOTIFY_EMAIL_ENABLED"
+  | "NOTIFY_KYC_ALERTS"
+  | "NOTIFY_NEW_USER_ALERTS"
+  | "NOTIFY_ALERT_EMAIL"
+  | "NOTIFY_WEBHOOK_URL";
 
 export interface AppSettings {
   [key: string]: {
@@ -312,7 +360,7 @@ export const api = {
   getSettings: () =>
     adminFetch<ApiResponse<AppSettings>>("/settings"),
 
-  updateSetting: (key: string, value: string) =>
+  updateSetting: (key: SettingsKey, value: string) =>
     adminFetch<ApiResponse<unknown>>("/settings", {
       method: "PUT",
       body: JSON.stringify({ key, value }),

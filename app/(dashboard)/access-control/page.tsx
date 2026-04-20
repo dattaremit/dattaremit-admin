@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Trash2, Hourglass, Info, Ban, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -45,6 +45,7 @@ export default function AccessControlPage() {
   const [waitlistEnabled, setWaitlistEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const toggleInFlight = useRef(false);
 
   useEffect(() => {
     async function load() {
@@ -61,6 +62,8 @@ export default function AccessControlPage() {
   }, []);
 
   async function onToggle(next: boolean) {
+    if (toggleInFlight.current) return;
+    toggleInFlight.current = true;
     const prev = waitlistEnabled;
     setWaitlistEnabled(next);
     setSaving(true);
@@ -74,6 +77,7 @@ export default function AccessControlPage() {
       );
     } finally {
       setSaving(false);
+      toggleInFlight.current = false;
     }
   }
 

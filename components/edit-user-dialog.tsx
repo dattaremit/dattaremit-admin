@@ -16,6 +16,10 @@ import { Label } from "@/components/ui/label";
 import { api, type User } from "@/lib/api";
 import { UserIdentityFields } from "@/components/users/user-identity-fields";
 import { useUserIdentityForm } from "@/hooks/use-user-identity-form";
+import {
+  userIdentitySchema,
+  referValueSchema,
+} from "@/schemas/user-identity.schema";
 
 interface EditUserDialogProps {
   user: User;
@@ -50,13 +54,25 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const parsed = userIdentitySchema.safeParse(values);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Invalid details");
+      return;
+    }
+    const parsedRefer = referValueSchema.safeParse(referValue);
+    if (!parsedRefer.success) {
+      toast.error(parsedRefer.error.issues[0]?.message ?? "Invalid refer value");
+      return;
+    }
+
     setLoading(true);
 
     try {
       await api.updateUser(user.id, {
-        ...values,
-        nationality: values.nationality || undefined,
-        referValue,
+        ...parsed.data,
+        nationality: parsed.data.nationality || undefined,
+        referValue: parsedRefer.data,
       });
 
       toast.success("User updated successfully");
@@ -88,7 +104,10 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
               type="number"
               min={1}
               value={referValue}
-              onChange={(e) => setReferValue(parseInt(e.target.value) || 1)}
+              onChange={(e) => {
+                const n = parseInt(e.target.value, 10);
+                setReferValue(Number.isFinite(n) && n >= 1 ? n : 1);
+              }}
             />
           </div>
 

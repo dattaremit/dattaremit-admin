@@ -24,10 +24,13 @@ import { UserProfile } from "@/components/users/user-profile";
 import { UserAddresses } from "@/components/users/user-addresses";
 import { UserActivityHistory } from "@/components/users/user-activity-history";
 
+const USER_ID_REGEX = /^[a-zA-Z0-9_-]{1,64}$/;
+
 export default function UserDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const rawId = params.id as string;
+  const id = USER_ID_REGEX.test(rawId) ? rawId : "";
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -49,6 +52,7 @@ export default function UserDetailPage() {
 
   const { data: user, loading, error, refetch } = useApiFetch(
     async () => {
+      if (!id) throw new Error("Invalid user ID");
       const res = await api.getUserById(id);
       return res.data;
     },

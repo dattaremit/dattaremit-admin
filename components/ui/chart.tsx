@@ -69,12 +69,19 @@ function ChartContainer({
   )
 }
 
+const SAFE_KEY = /^[\w-]+$/
+const SAFE_COLOR = /^(var\(--[\w-]+\)|#[0-9a-fA-F]{3,8}|oklch\([^)]+\)|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|hsla\([^)]+\)|[a-zA-Z]+)$/
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color
   )
 
   if (!colorConfig.length) {
+    return null
+  }
+
+  if (!SAFE_KEY.test(id)) {
     return null
   }
 
@@ -90,7 +97,9 @@ ${colorConfig
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
+    if (!color) return null
+    if (!SAFE_KEY.test(key) || !SAFE_COLOR.test(color)) return null
+    return `  --color-${key}: ${color};`
   })
   .join("\n")}
 }

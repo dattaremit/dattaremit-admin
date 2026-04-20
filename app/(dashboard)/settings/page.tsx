@@ -68,9 +68,10 @@ export default function SettingsPage() {
                 <Shield className="h-4 w-4" />
                 <AlertTitle>Authentication</AlertTitle>
                 <AlertDescription>
-                  The admin dashboard uses token-based authentication. The admin
-                  token is stored in your browser&apos;s local storage and sent with
-                  every API request via the <code>x-auth-token</code> header.
+                  The admin dashboard authenticates every request with a
+                  Clerk-issued JWT obtained through <code>getToken()</code> and
+                  sent in the <code>x-auth-token</code> header. No admin secret
+                  is persisted in the browser.
                 </AlertDescription>
               </Alert>
 
@@ -78,8 +79,8 @@ export default function SettingsPage() {
                 <div>
                   <Label>Session Status</Label>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    You are currently authenticated. Your token is securely stored
-                    in local storage.
+                    You are currently authenticated. Session lifetime is managed
+                    by Clerk.
                   </p>
                 </div>
                 <Separator />

@@ -125,9 +125,11 @@ export function UserProfile({ user, instantTransferLoading, onInstantTransferTog
             value={formatDate(user.created_at)}
           />
           <Separator />
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Integration IDs</p>
-            <div className="space-y-1 text-xs">
+          <details className="space-y-2">
+            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+              Integration IDs
+            </summary>
+            <div className="mt-2 space-y-1 text-xs">
               <p>
                 <span className="text-muted-foreground">Clerk:</span>{" "}
                 <code className="rounded bg-muted px-1">{user.clerkUserId}</code>
@@ -138,8 +140,12 @@ export function UserProfile({ user, instantTransferLoading, onInstantTransferTog
                   {user.zynkEntityId || "N/A"}
                 </code>
               </p>
+              <p className="text-muted-foreground italic">
+                These are third-party processor keys. Do not share outside
+                this panel.
+              </p>
             </div>
-          </div>
+          </details>
         </CardContent>
       </Card>
     </div>

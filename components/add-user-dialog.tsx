@@ -24,6 +24,7 @@ import {
 import { api } from "@/lib/api";
 import { UserIdentityFields } from "@/components/users/user-identity-fields";
 import { useUserIdentityForm } from "@/hooks/use-user-identity-form";
+import { userIdentitySchema } from "@/schemas/user-identity.schema";
 
 interface AddUserDialogProps {
   onSuccess: () => void;
@@ -41,12 +42,19 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const parsed = userIdentitySchema.safeParse(values);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Invalid details");
+      return;
+    }
+
     setLoading(true);
 
     try {
       await api.createUser({
-        ...values,
-        nationality: values.nationality || undefined,
+        ...parsed.data,
+        nationality: parsed.data.nationality || undefined,
         role,
         accountStatus,
       });
