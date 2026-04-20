@@ -1,44 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Hourglass, Loader2 } from "lucide-react";
+import { ArrowRight, Hourglass } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
+import { useSettingsKey } from "@/hooks/use-settings-key";
+import {
+  SettingsCard,
+  LastUpdated,
+} from "@/components/settings/settings-card";
 
 export function AccessControlSettingsForm() {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [enabled, setEnabled] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const {
+    value: enabled,
+    setValue: setEnabled,
+    loading,
+    lastUpdated,
+    setLastUpdated,
+  } = useSettingsKey<boolean>(
+    "WAITLIST_ENABLED",
+    (raw) => raw === "true",
+    false,
+    "Failed to load waitlist setting",
+  );
 
-  useEffect(() => {
-    async function loadSettings() {
-      try {
-        const response = await api.getSettings();
-        const setting = response.data.WAITLIST_ENABLED;
-        if (setting) {
-          setEnabled(setting.value === "true");
-          setLastUpdated(setting.updated_at);
-        }
-      } catch {
-        toast.error("Failed to load waitlist setting");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadSettings();
-  }, []);
+  const [saving, setSaving] = useState(false);
 
   async function onToggle(checked: boolean) {
     setSaving(true);
@@ -63,55 +53,37 @@ export function AccessControlSettingsForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Hourglass className="h-5 w-5" />
-          Waitlist
-        </CardTitle>
-        <CardDescription>
-          When enabled, new signups see the waitlist screen. Emails on the
-          allowlist bypass the waitlist. Emails on the blocklist are always
-          blocked, even when the waitlist is off.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    <SettingsCard
+      title="Waitlist"
+      icon={Hourglass}
+      description="When enabled, new signups see the waitlist screen. Emails on the allowlist bypass the waitlist. Emails on the blocklist are always blocked, even when the waitlist is off."
+      loading={loading}
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label htmlFor="waitlist-enabled">Waitlist mode</Label>
+            <p className="text-sm text-muted-foreground">
+              Gate new signups behind the waitlist screen.
+            </p>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label htmlFor="waitlist-enabled">Waitlist mode</Label>
-                <p className="text-sm text-muted-foreground">
-                  Gate new signups behind the waitlist screen.
-                </p>
-              </div>
-              <Switch
-                id="waitlist-enabled"
-                checked={enabled}
-                disabled={saving}
-                onCheckedChange={onToggle}
-              />
-            </div>
+          <Switch
+            id="waitlist-enabled"
+            checked={enabled}
+            disabled={saving}
+            onCheckedChange={onToggle}
+          />
+        </div>
 
-            <Button asChild variant="outline" size="sm">
-              <Link href="/access-control">
-                Manage blocklist & allowlist
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/access-control">
+            Manage blocklist & allowlist
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Link>
+        </Button>
 
-            {lastUpdated && (
-              <p className="text-xs text-muted-foreground">
-                Last updated: {new Date(lastUpdated).toLocaleString()}
-              </p>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        <LastUpdated at={lastUpdated} />
+      </div>
+    </SettingsCard>
   );
 }
