@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { api, type User } from "@/lib/api";
+import { useDialogAction } from "@/hooks/use-dialog-action";
 
 interface DeleteUserDialogProps {
   user: User;
@@ -21,22 +20,15 @@ interface DeleteUserDialogProps {
 }
 
 export function DeleteUserDialog({ user, open, onOpenChange, onSuccess }: DeleteUserDialogProps) {
-  const [loading, setLoading] = useState(false);
-
-  async function handleDelete() {
-    setLoading(true);
-
-    try {
-      await api.deleteUser(user.id);
-      toast.success("User deleted successfully");
-      onOpenChange(false);
-      onSuccess();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete user");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { loading, run: handleDelete } = useDialogAction(
+    () => api.deleteUser(user.id),
+    {
+      successMessage: "User deleted successfully",
+      errorMessage: "Failed to delete user",
+      onOpenChange,
+      onSuccess,
+    },
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,7 +44,7 @@ export function DeleteUserDialog({ user, open, onOpenChange, onSuccess }: Delete
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+          <Button variant="destructive" onClick={() => handleDelete()} disabled={loading}>
             {loading ? "Deleting..." : "Delete User"}
           </Button>
         </DialogFooter>

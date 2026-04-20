@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api, type User } from "@/lib/api";
+import { useDialogAction } from "@/hooks/use-dialog-action";
+
+type Role = "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER";
 
 interface ChangeRoleDialogProps {
   user: User;
@@ -29,23 +31,21 @@ interface ChangeRoleDialogProps {
 }
 
 export function ChangeRoleDialog({ user, open, onOpenChange, onSuccess }: ChangeRoleDialogProps) {
-  const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<"ADMIN" | "USER" | "INFLUENCER" | "PROMOTER">(user.role);
+  const [role, setRole] = useState<Role>(user.role);
+
+  const { loading, run } = useDialogAction(
+    (nextRole: Role) => api.changeUserRole(user.id, nextRole),
+    {
+      successMessage: "User role updated successfully",
+      errorMessage: "Failed to change role",
+      onOpenChange,
+      onSuccess,
+    },
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      await api.changeUserRole(user.id, role);
-      toast.success("User role updated successfully");
-      onOpenChange(false);
-      onSuccess();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to change role");
-    } finally {
-      setLoading(false);
-    }
+    await run(role);
   }
 
   return (
@@ -61,7 +61,7 @@ export function ChangeRoleDialog({ user, open, onOpenChange, onSuccess }: Change
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER")}>
+            <Select value={role} onValueChange={(v) => setRole(v as Role)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

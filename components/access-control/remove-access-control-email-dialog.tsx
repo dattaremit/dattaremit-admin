@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { api, type AccessControlEntry } from "@/lib/api";
+import { useDialogAction } from "@/hooks/use-dialog-action";
 
 interface RemoveAccessControlEmailDialogProps {
   entry: AccessControlEntry;
@@ -26,24 +25,17 @@ export function RemoveAccessControlEmailDialog({
   onOpenChange,
   onSuccess,
 }: RemoveAccessControlEmailDialogProps) {
-  const [loading, setLoading] = useState(false);
   const listLabel = entry.listType === "BLOCKLIST" ? "blocklist" : "allowlist";
 
-  async function handleRemove() {
-    setLoading(true);
-    try {
-      await api.removeAccessControlEmail(entry.id);
-      toast.success(`Removed from ${listLabel}`);
-      onOpenChange(false);
-      onSuccess();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to remove entry",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { loading, run: handleRemove } = useDialogAction(
+    () => api.removeAccessControlEmail(entry.id),
+    {
+      successMessage: `Removed from ${listLabel}`,
+      errorMessage: "Failed to remove entry",
+      onOpenChange,
+      onSuccess,
+    },
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -67,7 +59,7 @@ export function RemoveAccessControlEmailDialog({
           </Button>
           <Button
             variant="destructive"
-            onClick={handleRemove}
+            onClick={() => handleRemove()}
             disabled={loading}
           >
             {loading ? "Removing..." : "Remove"}

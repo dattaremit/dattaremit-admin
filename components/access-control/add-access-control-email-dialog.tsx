@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { api, type AccessListType } from "@/lib/api";
+import { useDialogAction } from "@/hooks/use-dialog-action";
 
 interface AddAccessControlEmailDialogProps {
   listType: AccessListType;
@@ -28,7 +28,6 @@ export function AddAccessControlEmailDialog({
   onSuccess,
 }: AddAccessControlEmailDialogProps) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
 
@@ -39,26 +38,27 @@ export function AddAccessControlEmailDialog({
     setReason("");
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await api.addAccessControlEmail({
+  const { loading, run } = useDialogAction(
+    () =>
+      api.addAccessControlEmail({
         email: email.trim(),
         listType,
         reason: reason.trim() || undefined,
-      });
-      toast.success(`Added to ${listLabel}`);
-      resetForm();
-      setOpen(false);
-      onSuccess();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : `Failed to add to ${listLabel}`,
-      );
-    } finally {
-      setLoading(false);
-    }
+      }),
+    {
+      successMessage: `Added to ${listLabel}`,
+      errorMessage: `Failed to add to ${listLabel}`,
+      onOpenChange: (next) => {
+        setOpen(next);
+        if (!next) resetForm();
+      },
+      onSuccess,
+    },
+  );
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await run();
   }
 
   return (
