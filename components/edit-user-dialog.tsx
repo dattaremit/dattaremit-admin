@@ -14,6 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api, type User } from "@/lib/api";
+import { UserIdentityFields } from "@/components/users/user-identity-fields";
+import { useUserIdentityForm } from "@/hooks/use-user-identity-form";
 
 interface EditUserDialogProps {
   user: User;
@@ -22,27 +24,28 @@ interface EditUserDialogProps {
   onSuccess: () => void;
 }
 
+function userToIdentity(user: User) {
+  return {
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    phoneNumberPrefix: user.phoneNumberPrefix,
+    phoneNumber: user.phoneNumber,
+    dateOfBirth: user.dateOfBirth ? user.dateOfBirth.split("T")[0] : "",
+    nationality: user.nationality || "",
+  };
+}
+
 export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUserDialogProps) {
   const [loading, setLoading] = useState(false);
 
-  const [firstName, setFirstName] = useState(user.firstName);
-  const [lastName, setLastName] = useState(user.lastName);
-  const [email, setEmail] = useState(user.email);
-  const [phoneNumberPrefix, setPhoneNumberPrefix] = useState(user.phoneNumberPrefix);
-  const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber);
-  const [dateOfBirth, setDateOfBirth] = useState(user.dateOfBirth ? user.dateOfBirth.split("T")[0] : "");
-  const [nationality, setNationality] = useState(user.nationality || "");
+  const { values, setValue, reset } = useUserIdentityForm(userToIdentity(user));
   const [referValue, setReferValue] = useState(user.referValue ?? 1);
 
   useEffect(() => {
-    setFirstName(user.firstName);
-    setLastName(user.lastName);
-    setEmail(user.email);
-    setPhoneNumberPrefix(user.phoneNumberPrefix);
-    setPhoneNumber(user.phoneNumber);
-    setDateOfBirth(user.dateOfBirth ? user.dateOfBirth.split("T")[0] : "");
-    setNationality(user.nationality || "");
+    reset(userToIdentity(user));
     setReferValue(user.referValue ?? 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -51,13 +54,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
 
     try {
       await api.updateUser(user.id, {
-        firstName,
-        lastName,
-        email,
-        phoneNumberPrefix,
-        phoneNumber,
-        dateOfBirth,
-        nationality: nationality || undefined,
+        ...values,
+        nationality: values.nationality || undefined,
         referValue,
       });
 
@@ -81,79 +79,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-firstName">First Name</Label>
-              <Input
-                id="edit-firstName"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-lastName">Last Name</Label>
-              <Input
-                id="edit-lastName"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-email">Email</Label>
-            <Input
-              id="edit-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-phonePrefix">Prefix</Label>
-              <Input
-                id="edit-phonePrefix"
-                value={phoneNumberPrefix}
-                onChange={(e) => setPhoneNumberPrefix(e.target.value)}
-                placeholder="+1"
-                required
-              />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="edit-phoneNumber">Phone Number</Label>
-              <Input
-                id="edit-phoneNumber"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-dateOfBirth">Date of Birth</Label>
-            <Input
-              id="edit-dateOfBirth"
-              type="date"
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-nationality">Nationality</Label>
-            <Input
-              id="edit-nationality"
-              value={nationality}
-              onChange={(e) => setNationality(e.target.value)}
-            />
-          </div>
+          <UserIdentityFields values={values} onChange={setValue} idPrefix="edit" />
 
           <div className="space-y-2">
             <Label htmlFor="edit-referValue">Refer Value</Label>

@@ -13,7 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -23,36 +22,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
+import { UserIdentityFields } from "@/components/users/user-identity-fields";
+import { useUserIdentityForm } from "@/hooks/use-user-identity-form";
 
 interface AddUserDialogProps {
   onSuccess: () => void;
 }
 
+type AccountStatus = "INITIAL" | "ACTIVE" | "PENDING" | "REJECTED";
+
 export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phoneNumberPrefix, setPhoneNumberPrefix] = useState("+1");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [nationality, setNationality] = useState("");
+  const { values, setValue, reset } = useUserIdentityForm();
   const [role, setRole] = useState<"ADMIN" | "USER">("USER");
-  const [accountStatus, setAccountStatus] = useState<"INITIAL" | "ACTIVE" | "PENDING" | "REJECTED">("INITIAL");
-
-  function resetForm() {
-    setFirstName("");
-    setLastName("");
-    setEmail("");
-    setPhoneNumberPrefix("+1");
-    setPhoneNumber("");
-    setDateOfBirth("");
-    setNationality("");
-    setRole("USER");
-    setAccountStatus("INITIAL");
-  }
+  const [accountStatus, setAccountStatus] = useState<AccountStatus>("INITIAL");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,19 +45,16 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
 
     try {
       await api.createUser({
-        firstName,
-        lastName,
-        email,
-        phoneNumberPrefix,
-        phoneNumber,
-        dateOfBirth,
-        nationality: nationality || undefined,
+        ...values,
+        nationality: values.nationality || undefined,
         role,
         accountStatus,
       });
 
       toast.success("User created successfully");
-      resetForm();
+      reset();
+      setRole("USER");
+      setAccountStatus("INITIAL");
       setOpen(false);
       onSuccess();
     } catch (err) {
@@ -98,79 +80,7 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input
-                id="firstName"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="phonePrefix">Prefix</Label>
-              <Input
-                id="phonePrefix"
-                value={phoneNumberPrefix}
-                onChange={(e) => setPhoneNumberPrefix(e.target.value)}
-                placeholder="+1"
-                required
-              />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="phoneNumber">Phone Number</Label>
-              <Input
-                id="phoneNumber"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="dateOfBirth">Date of Birth</Label>
-            <Input
-              id="dateOfBirth"
-              type="date"
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="nationality">Nationality</Label>
-            <Input
-              id="nationality"
-              value={nationality}
-              onChange={(e) => setNationality(e.target.value)}
-            />
-          </div>
+          <UserIdentityFields values={values} onChange={setValue} />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -187,7 +97,7 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
             </div>
             <div className="space-y-2">
               <Label>Account Status</Label>
-              <Select value={accountStatus} onValueChange={(v) => setAccountStatus(v as typeof accountStatus)}>
+              <Select value={accountStatus} onValueChange={(v) => setAccountStatus(v as AccountStatus)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
