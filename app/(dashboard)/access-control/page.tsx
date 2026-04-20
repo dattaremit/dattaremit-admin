@@ -37,6 +37,7 @@ import { AddAccessControlEmailDialog } from "@/components/access-control/add-acc
 import { RemoveAccessControlEmailDialog } from "@/components/access-control/remove-access-control-email-dialog";
 import { EmptyTableRow } from "@/components/table/empty-table-row";
 import { SearchInput } from "@/components/search-input";
+import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { api, type AccessControlEntry, type AccessListType } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 
@@ -180,9 +181,7 @@ function AccessControlTable({
   description: string;
 }) {
   const [search, setSearch] = useState("");
-  const [removeEntry, setRemoveEntry] = useState<AccessControlEntry | null>(
-    null,
-  );
+  const removeDialog = useCrudDialog<AccessControlEntry>();
 
   const {
     data: entries,
@@ -266,7 +265,7 @@ function AccessControlTable({
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => setRemoveEntry(entry)}
+                              onClick={() => removeDialog.open(entry)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -291,12 +290,10 @@ function AccessControlTable({
         />
       </CardContent>
 
-      {removeEntry && (
+      {removeDialog.target && (
         <RemoveAccessControlEmailDialog
-          entry={removeEntry}
-          open={!!removeEntry}
-          onOpenChange={(open) => !open && setRemoveEntry(null)}
-          onSuccess={refetch}
+          entry={removeDialog.target}
+          {...removeDialog.bindProps(refetch)}
         />
       )}
     </Card>

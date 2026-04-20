@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { api, type User } from "@/lib/api";
 import { useFilteredTable } from "@/hooks/use-filtered-table";
+import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { PagePagination } from "@/components/page-pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { ErrorState } from "@/components/error-state";
@@ -24,9 +25,9 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const [editUser, setEditUser] = useState<User | null>(null);
-  const [deleteUser, setDeleteUser] = useState<User | null>(null);
-  const [changeRoleUser, setChangeRoleUser] = useState<User | null>(null);
+  const editDialog = useCrudDialog<User>();
+  const deleteDialog = useCrudDialog<User>();
+  const changeRoleDialog = useCrudDialog<User>();
 
   const { data: users, total, page, setPage, totalPages, loading, error, refetch } =
     useFilteredTable<User, { search?: string; status?: string }>(
@@ -71,9 +72,9 @@ export default function UsersPage() {
           ) : (
             <UsersTable
               users={users}
-              onEdit={setEditUser}
-              onChangeRole={setChangeRoleUser}
-              onDelete={setDeleteUser}
+              onEdit={editDialog.open}
+              onChangeRole={changeRoleDialog.open}
+              onDelete={deleteDialog.open}
             />
           )}
 
@@ -81,31 +82,16 @@ export default function UsersPage() {
         </CardContent>
       </Card>
 
-      {editUser && (
-        <EditUserDialog
-          user={editUser}
-          open={!!editUser}
-          onOpenChange={(open) => !open && setEditUser(null)}
-          onSuccess={refetch}
-        />
+      {editDialog.target && (
+        <EditUserDialog user={editDialog.target} {...editDialog.bindProps(refetch)} />
       )}
 
-      {deleteUser && (
-        <DeleteUserDialog
-          user={deleteUser}
-          open={!!deleteUser}
-          onOpenChange={(open) => !open && setDeleteUser(null)}
-          onSuccess={refetch}
-        />
+      {deleteDialog.target && (
+        <DeleteUserDialog user={deleteDialog.target} {...deleteDialog.bindProps(refetch)} />
       )}
 
-      {changeRoleUser && (
-        <ChangeRoleDialog
-          user={changeRoleUser}
-          open={!!changeRoleUser}
-          onOpenChange={(open) => !open && setChangeRoleUser(null)}
-          onSuccess={refetch}
-        />
+      {changeRoleDialog.target && (
+        <ChangeRoleDialog user={changeRoleDialog.target} {...changeRoleDialog.bindProps(refetch)} />
       )}
     </div>
   );
