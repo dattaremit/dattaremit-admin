@@ -29,7 +29,7 @@ const transferLimitsSchema = z.object({
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, "Must be a valid dollar amount")
     .refine((v) => parseFloat(v) >= 100, "Minimum limit is $100")
-    .refine((v) => parseFloat(v) <= 1000000, "Maximum limit is $1,000,000"),
+    .refine((v) => parseFloat(v) <= 25000, "Maximum limit is $25,000"),
 });
 
 type TransferLimitsFormValues = z.infer<typeof transferLimitsSchema>;
@@ -94,7 +94,7 @@ export function TransferLimitsForm() {
                 </FormControl>
                 <FormDescription>
                   Maximum total amount a user can transfer in a rolling
-                  7-day window. Minimum: $100, Maximum: $1,000,000.
+                  7-day window. Minimum: $100, Maximum: $25,000.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
