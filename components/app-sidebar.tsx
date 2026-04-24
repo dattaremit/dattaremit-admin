@@ -7,6 +7,7 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   Users,
+  UserSearch,
   Activity,
   Settings,
   LogOut,
@@ -31,6 +32,7 @@ import { Separator } from "@/components/ui/separator";
 const navItems = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
   { title: "Users", href: "/users", icon: Users },
+  { title: "Recipients", href: "/recipients", icon: UserSearch },
   { title: "Activities", href: "/activities", icon: Activity },
   { title: "Marketing", href: "/marketing", icon: Megaphone },
   { title: "Referrals", href: "/referrals", icon: Gift },

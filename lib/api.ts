@@ -218,9 +218,58 @@ export interface AccessControlListResponse {
 export interface PaginatedResponse<T> {
   users?: T[];
   activities?: T[];
+  recipients?: T[];
   total: number;
   page: number;
   limit: number;
+}
+
+export interface BankDetailsPublic {
+  id: string;
+  label: string | null;
+  bankName: string | null;
+  bankAccountName: string | null;
+  bankAccountNumberMasked: string | null;
+  bankIfsc: string | null;
+  branchName: string | null;
+  bankAccountType: string | null;
+  isDefault: boolean;
+  created_at?: string;
+}
+
+export interface RecipientSummary {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumberPrefix: string;
+  phoneNumber: string;
+  kycStatus: "PENDING" | "APPROVED" | "REJECTED" | "FAILED" | null;
+  banks: BankDetailsPublic[];
+  defaultBank: BankDetailsPublic | null;
+  hasBankAccount: boolean;
+  linkedUserCount: number;
+  bankCount: number;
+  created_at: string;
+}
+
+export interface RecipientDetail extends RecipientSummary {
+  nationality: string;
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  linkedUsers: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    accountStatus: string;
+    created_at: string;
+    linkedAt: string;
+  }[];
 }
 
 export interface PromoterPaginatedResponse {
@@ -279,6 +328,26 @@ export const api = {
 
   getUserById: (id: string) =>
     adminFetch<ApiResponse<User>>(`/users/${id}`),
+
+  getRecipients: (
+    page = 1,
+    limit = 20,
+    search?: string,
+    kycStatus?: string,
+  ) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (search) params.set("search", search);
+    if (kycStatus) params.set("kycStatus", kycStatus);
+    return adminFetch<ApiResponse<PaginatedResponse<RecipientSummary>>>(
+      `/recipients?${params}`,
+    );
+  },
+
+  getRecipientById: (id: string) =>
+    adminFetch<ApiResponse<RecipientDetail>>(`/recipients/${id}`),
 
   getActivities: (page = 1, limit = 20, type?: string, status?: string) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
