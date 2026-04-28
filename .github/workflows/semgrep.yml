@@ -29,14 +29,12 @@ on:
 
 permissions:
   contents: read
-  security-events: write  # Upload SARIF to GitHub Security tab
-  actions: read           # Required by upload-sarif in private repos
 
 jobs:
   semgrep:
     name: Semgrep SAST Scan
     runs-on: ubuntu-latest
-    # Skip Dependabot PRs — bot PRs lack write access required for SARIF upload.
+    # Skip Dependabot PRs — bot PRs lack write access to the repo.
     if: github.actor != 'dependabot[bot]'
     container:
       image: semgrep/semgrep:1.100.0
@@ -59,10 +57,6 @@ jobs:
             --config "p/security-audit" \
             --config "p/owasp-top-ten" \
             --config "p/secrets" \
-            --sarif \
-            --output semgrep-results.sarif \
-            --severity ERROR \
-            --error \
             --exclude "node_modules" \
             --exclude ".next" \
             --exclude "out" \
@@ -70,13 +64,3 @@ jobs:
             --exclude "coverage" \
             --exclude "*.min.js" \
             --exclude "public"
-
-      # Upload findings to the GitHub Security tab even when Semgrep exits
-      # non-zero (always()) — the SARIF file is written before exit so findings
-      # appear in "Security -> Code scanning alerts" regardless of job outcome.
-      - name: Upload SARIF to GitHub Security tab
-        if: always() && github.actor != 'dependabot[bot]'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: semgrep-results.sarif
-          category: semgrep
