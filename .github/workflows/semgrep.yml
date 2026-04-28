@@ -1,0 +1,82 @@
+# .github/workflows/semgrep.yml
+#
+# Semgrep SAST workflow for dattaremit-admin.
+#
+# SEMGREP_APP_TOKEN (optional — enables Semgrep Cloud dashboard + PR comments):
+#   1. Sign in at https://semgrep.dev with your GitHub account
+#   2. Settings -> Tokens -> Create new token (scope: CI)
+#   3. Repo -> Settings -> Secrets and variables -> Actions -> New secret
+#      Name: SEMGREP_APP_TOKEN
+#   Without the token, the workflow runs fully offline and fails the job on
+#   ERROR-severity findings. The token is only needed for Semgrep Cloud.
+name: Semgrep SAST
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  schedule:
+    # Weekly full scan: Monday at 03:17 UTC.
+    # Non-round minute avoids GitHub cron-storm contention.
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+  security-events: write  # Upload SARIF to GitHub Security tab
+  actions: read           # Required by upload-sarif in private repos
+
+jobs:
+  semgrep:
+    name: Semgrep SAST Scan
+    runs-on: ubuntu-latest
+    # Skip Dependabot PRs — bot PRs lack write access required for SARIF upload.
+    if: github.actor != 'dependabot[bot]'
+    container:
+      image: semgrep/semgrep:1.100.0
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Full history enables diff-aware scanning on pull_request events,
+          # so only changed files are scanned rather than the full tree.
+          fetch-depth: 0
+
+      - name: Run Semgrep SAST
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run: |
+          semgrep ci \
+            --config "p/typescript" \
+            --config "p/react" \
+            --config "p/nextjs" \
+            --config "p/security-audit" \
+            --config "p/owasp-top-ten" \
+            --config "p/secrets" \
+            --sarif \
+            --output semgrep-results.sarif \
+            --severity ERROR \
+            --error \
+            --exclude "node_modules" \
+            --exclude ".next" \
+            --exclude "out" \
+            --exclude "build" \
+            --exclude "coverage" \
+            --exclude "*.min.js" \
+            --exclude "public"
+
+      # Upload findings to the GitHub Security tab even when Semgrep exits
+      # non-zero (always()) — the SARIF file is written before exit so findings
+      # appear in "Security -> Code scanning alerts" regardless of job outcome.
+      - name: Upload SARIF to GitHub Security tab
+        if: always() && github.actor != 'dependabot[bot]'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep-results.sarif
+          category: semgrep
