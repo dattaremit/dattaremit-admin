@@ -17,16 +17,16 @@ function assertApiBaseUrl(): string {
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
-function safeErrorMessage(status: number): string {
-  if (status === 401) return "Your session has expired. Please sign in again.";
-  if (status === 403) return "You don't have permission to do that.";
-  if (status === 404) return "We couldn't find what you were looking for.";
-  if (status === 409) return "This request conflicts with an existing record.";
-  if (status === 422) return "Some of the information you entered isn't valid.";
-  if (status === 429) return "Too many requests. Please wait a moment.";
-  if (status >= 500) return "A server error occurred. Please try again later.";
-  if (status >= 400) return "Invalid request. Please check your details.";
-  return "An unexpected error occurred. Please try again.";
+function extractErrorMessage(body: unknown): string {
+  if (
+    body &&
+    typeof body === "object" &&
+    "message" in body &&
+    typeof (body as { message: unknown }).message === "string"
+  ) {
+    return (body as { message: string }).message;
+  }
+  return "Request failed";
 }
 
 let getAuthToken: (() => Promise<string | null>) | null = null;
@@ -59,7 +59,7 @@ async function adminFetch<T>(
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       console.error("API error", res.status, body);
-      throw new Error(safeErrorMessage(res.status));
+      throw new Error(extractErrorMessage(body));
     }
 
     return res.json();
