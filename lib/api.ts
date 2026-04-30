@@ -139,9 +139,32 @@ export interface Activity {
   metadata: Record<string, unknown> | null;
   referenceId: string | null;
   ipAddress: string | null;
+  // Audit-grade fields. Optional because legacy rows pre-PR1 won't carry them.
+  actorId?: string | null;
+  actorType?: "USER" | "ADMIN" | "SYSTEM" | "WEBHOOK";
+  requestId?: string | null;
+  userAgent?: string | null;
+  sessionId?: string | null;
+  deviceId?: string | null;
+  diff?: Record<string, unknown> | null;
+  resultCode?: string | null;
   created_at: string;
   updated_at: string;
   user?: User;
+}
+
+export interface ActivityFilters {
+  type?: string;
+  status?: string;
+  actorId?: string;
+  subjectUserId?: string;
+  referenceId?: string;
+  from?: string;
+  to?: string;
+  // Index signature lets the value flow through `useFilteredTable<F extends FilterMap>`
+  // without a structural mismatch — the hook treats every entry as
+  // `string | undefined` and only forwards keys that exist on this type.
+  [key: string]: string | undefined;
 }
 
 export interface ChartDataPoint {
@@ -349,11 +372,49 @@ export const api = {
   getRecipientById: (id: string) =>
     adminFetch<ApiResponse<RecipientDetail>>(`/recipients/${id}`),
 
-  getActivities: (page = 1, limit = 20, type?: string, status?: string) => {
+  getActivities: (page = 1, limit = 20, filters: ActivityFilters = {}) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-    if (type) params.set("type", type);
-    if (status) params.set("status", status);
+    if (filters.type) params.set("type", filters.type);
+    if (filters.status) params.set("status", filters.status);
+    if (filters.actorId) params.set("actorId", filters.actorId);
+    if (filters.subjectUserId) params.set("subjectUserId", filters.subjectUserId);
+    if (filters.referenceId) params.set("referenceId", filters.referenceId);
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
     return adminFetch<ApiResponse<PaginatedResponse<Activity>>>(`/activities?${params}`);
+  },
+
+  /**
+   * Triggers a CSV download by fetching the export with the auth header set,
+   * then handing the resulting Blob to the browser. Avoids leaking the auth
+   * token into the URL (which would be logged by proxies / browser history).
+   */
+  downloadActivitiesCsv: async (filters: ActivityFilters = {}) => {
+    const params = new URLSearchParams({ format: "csv" });
+    if (filters.type) params.set("type", filters.type);
+    if (filters.status) params.set("status", filters.status);
+    if (filters.actorId) params.set("actorId", filters.actorId);
+    if (filters.subjectUserId) params.set("subjectUserId", filters.subjectUserId);
+    if (filters.referenceId) params.set("referenceId", filters.referenceId);
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+
+    if (!getAuthToken) throw new Error("Token getter not initialized");
+    const token = await getAuthToken();
+    const baseUrl = assertApiBaseUrl();
+    const res = await fetch(`${baseUrl}/admin/activities/export?${params}`, {
+      headers: { "x-auth-token": token ?? "" },
+    });
+    if (!res.ok) {
+      throw new Error(`Export failed: ${res.status} ${res.statusText}`);
+    }
+    const blob = await res.blob();
+    const filename =
+      res.headers.get("Content-Disposition")?.match(/filename="?([^";]+)/)?.[1] ??
+      `activities-${Date.now()}.csv`;
+    const truncated = res.headers.get("X-Truncated") === "true";
+    const total = Number(res.headers.get("X-Total-Count") ?? 0);
+    return { blob, filename, truncated, total };
   },
 
   getRegistrationChart: () =>
