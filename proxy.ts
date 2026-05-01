@@ -13,12 +13,32 @@ function apiOrigin(): string {
   }
 }
 
+// Clerk's FAPI host is encoded in the publishable key. For pk_test_* it's a
+// shared subdomain like foo.clerk.accounts.dev; for pk_live_* it's your custom
+// domain (e.g. clerk.your-domain.com). Both must be allowlisted in the CSP.
+function clerkFapiHost(): string | null {
+  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (!pk) return null;
+  const m = pk.match(/^pk_(?:test|live)_(.+)$/);
+  if (!m) return null;
+  try {
+    const decoded = Buffer.from(m[1], "base64").toString("utf8");
+    const host = decoded.replace(/\$+$/, "").trim();
+    return host || null;
+  } catch {
+    return null;
+  }
+}
+
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV === "development";
   const api = apiOrigin();
+  const fapi = clerkFapiHost();
+  const fapiHttps = fapi ? `https://${fapi}` : "";
+  const fapiWss = fapi ? `wss://${fapi}` : "";
 
   const scriptSrc = isDev
-    ? "'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev https://challenges.cloudflare.com"
+    ? `'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev ${fapiHttps} https://challenges.cloudflare.com`
     : `'self' 'nonce-${nonce}' 'strict-dynamic' https://challenges.cloudflare.com`;
 
   const directives = [
@@ -27,8 +47,8 @@ function buildCsp(nonce: string): string {
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob: https://img.clerk.com https:`,
     `font-src 'self' data:`,
-    `connect-src 'self' ${api} https://*.clerk.accounts.dev https://clerk-telemetry.com https://api.clerk.com wss://*.clerk.accounts.dev`,
-    `frame-src 'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com`,
+    `connect-src 'self' ${api} https://*.clerk.accounts.dev ${fapiHttps} ${fapiWss} https://clerk-telemetry.com https://api.clerk.com wss://*.clerk.accounts.dev`,
+    `frame-src 'self' https://*.clerk.accounts.dev ${fapiHttps} https://challenges.cloudflare.com`,
     `worker-src 'self' blob:`,
     `manifest-src 'self'`,
     `frame-ancestors 'none'`,
