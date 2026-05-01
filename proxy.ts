@@ -18,8 +18,8 @@ function buildCsp(nonce: string): string {
   const api = apiOrigin();
 
   const scriptSrc = isDev
-    ? "'self' 'unsafe-eval' 'unsafe-inline'"
-    : `'self' 'nonce-${nonce}' 'strict-dynamic'`;
+    ? "'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev https://challenges.cloudflare.com"
+    : `'self' 'nonce-${nonce}' 'strict-dynamic' https://challenges.cloudflare.com`;
 
   const directives = [
     `default-src 'self'`,
@@ -42,11 +42,9 @@ function buildCsp(nonce: string): string {
   return directives.join("; ").replace(/\s{2,}/g, " ").trim();
 }
 
-// Server-side admin-role guard. The claim lives at
-// sessionClaims.publicMetadata.role and must be provisioned per admin user
-// via the Clerk Dashboard (or users.updateUser). Falling back to sign-in
-// fails closed: the separate server-side requireRole("ADMIN") middleware
-// in the API still blocks unauthorized API calls.
+// Auth gate: requires a signed-in user. Admin role is enforced server-side
+// against the DB via requireRole("ADMIN") in the API; DashboardShell calls
+// /admin/stats on mount and surfaces "Access Denied" on 403.
 export default clerkMiddleware(async (auth, request) => {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = buildCsp(nonce);
@@ -60,20 +58,8 @@ export default clerkMiddleware(async (auth, request) => {
     return res;
   };
 
-  if (isPublicRoute(request)) {
-    return withCsp(
-      NextResponse.next({ request: { headers: requestHeaders } }),
-    );
-  }
-
-  const { userId, sessionClaims } = await auth.protect();
-
-  const role =
-    (sessionClaims as { publicMetadata?: { role?: string } } | null)?.publicMetadata?.role;
-
-  if (!userId || role !== "admin") {
-    const signInUrl = new URL("/sign-in", request.url);
-    return withCsp(NextResponse.redirect(signInUrl));
+  if (!isPublicRoute(request)) {
+    await auth.protect();
   }
 
   return withCsp(NextResponse.next({ request: { headers: requestHeaders } }));

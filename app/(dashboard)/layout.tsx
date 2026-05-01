@@ -7,12 +7,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
   if (!userId) redirect("/sign-in");
-
-  const role =
-    (sessionClaims as { publicMetadata?: { role?: string } } | null)?.publicMetadata?.role;
-  if (role !== "admin") redirect("/sign-in");
 
   return <DashboardShell>{children}</DashboardShell>;
 }
