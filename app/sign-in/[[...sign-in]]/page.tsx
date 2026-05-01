@@ -4,18 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LogIn, Loader2, ArrowLeft } from "lucide-react";
+import { LogIn, Loader2, ArrowLeft, Lock, Mail } from "lucide-react";
 
 const MAX_BACKOFF_MS = 30_000;
 
@@ -180,113 +173,150 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2">
-            <Image
-              src="/logo.png"
-              alt="DattaRemit"
-              width={64}
-              height={64}
-              priority
-            />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
+      <div className="absolute inset-0 bg-ambient" />
+      <div
+        className="ambient-blob"
+        style={{
+          top: "-160px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "640px",
+          height: "480px",
+          background:
+            "radial-gradient(circle, oklch(from var(--brand) l c h / 0.18), transparent 70%)",
+        }}
+      />
+
+      <div className="relative z-10 w-full max-w-sm animate-fade-up">
+        <div className="mb-6 flex flex-col items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-card shadow-sm">
+            <Image src="/logo.png" alt="DattaRemit" width={28} height={28} priority />
           </div>
-          <CardTitle className="text-2xl">DattaRemit Admin</CardTitle>
-          <CardDescription>
-            {needsVerification
-              ? `We sent a verification code to ${email}`
-              : "Sign in with your account to access the dashboard"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            DattaRemit · Admin
+          </p>
+        </div>
+
+        <div className="surface rounded-2xl p-7">
+          <div className="space-y-1 pb-6">
+            <h1 className="text-xl font-semibold tracking-tight">
+              {needsVerification ? "Check your email" : "Sign in"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {needsVerification ? (
+                <>
+                  Code sent to{" "}
+                  <span className="font-medium text-foreground">{email}</span>
+                </>
+              ) : (
+                "Admin access only"
+              )}
+            </p>
+          </div>
+
           {needsVerification ? (
             <form onSubmit={handleVerify} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="code">Verification Code</Label>
+                <Label htmlFor="code" className="text-xs font-medium text-muted-foreground">
+                  Verification code
+                </Label>
                 <Input
                   id="code"
                   type="text"
                   inputMode="numeric"
                   maxLength={6}
                   autoComplete="one-time-code"
-                  placeholder="Enter 6-digit code"
+                  placeholder="••• •••"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   autoFocus
+                  className="h-11 text-center text-lg font-medium tracking-[0.4em] tabular"
                 />
               </div>
 
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="border-destructive/30 bg-destructive/5">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="h-11 w-full" disabled={loading}>
                 {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <LogIn className="mr-2 h-4 w-4" />
                 )}
-                {loading ? "Verifying..." : "Verify & Sign In"}
+                {loading ? "Verifying..." : "Verify & sign in"}
               </Button>
 
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full"
+                className="w-full text-sm text-muted-foreground hover:text-foreground"
                 onClick={handleBack}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to sign in
+                Back
               </Button>
             </form>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  autoFocus
-                />
+                <Label htmlFor="email" className="text-xs font-medium text-muted-foreground">
+                  Email
+                </Label>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    autoFocus
+                    className="h-11 pl-9"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                />
+                <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    className="h-11 pl-9"
+                  />
+                </div>
               </div>
 
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="border-destructive/30 bg-destructive/5">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="h-11 w-full" disabled={loading}>
                 {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <LogIn className="mr-2 h-4 w-4" />
                 )}
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -15,24 +15,28 @@ export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
         title="Total Users"
         value={stats.totalUsers}
         icon={Users}
+        accent="brand"
         description="All registered users"
       />
       <StatsCard
         title="Active Users"
         value={stats.activeUsers}
         icon={UserCheck}
+        accent="success"
         description="Verified & active"
       />
       <StatsCard
         title="Pending KYC"
         value={stats.pendingKyc}
         icon={Clock}
+        accent="warning"
         description="Awaiting verification"
       />
       <StatsCard
         title="Total Activities"
         value={stats.totalActivities}
         icon={Activity}
+        accent="neutral"
         description="All activity records"
       />
     </div>

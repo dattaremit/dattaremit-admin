@@ -26,11 +26,23 @@ export function DashboardTabs({ data }: DashboardTabsProps) {
   } = data;
 
   return (
-    <Tabs defaultValue="overview">
-      <TabsList>
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="analytics">Analytics</TabsTrigger>
-      </TabsList>
+    <Tabs defaultValue="overview" className="space-y-6">
+      <div className="flex items-center justify-between">
+        <TabsList className="h-10 rounded-full border border-border/60 bg-card/60 p-1 shadow-sm backdrop-blur">
+          <TabsTrigger
+            value="overview"
+            className="rounded-full px-5 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            Overview
+          </TabsTrigger>
+          <TabsTrigger
+            value="analytics"
+            className="rounded-full px-5 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            Analytics
+          </TabsTrigger>
+        </TabsList>
+      </div>
 
       <TabsContent value="overview" className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">

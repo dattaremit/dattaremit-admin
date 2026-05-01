@@ -137,33 +137,76 @@ export default function DashboardShell({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+      <SidebarInset className="bg-ambient">
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
           <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Separator orientation="vertical" className="mr-1 h-4" />
           <Breadcrumb>
-            <BreadcrumbList>
+            <BreadcrumbList className="gap-1.5">
               <BreadcrumbItem>
-                <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+                <BreadcrumbLink
+                  href="/"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Dashboard
+                </BreadcrumbLink>
               </BreadcrumbItem>
               {breadcrumbs.map((crumb) => (
                 <span key={crumb.label} className="contents">
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     {crumb.href ? (
-                      <BreadcrumbLink href={crumb.href}>
+                      <BreadcrumbLink
+                        href={crumb.href}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                      >
                         {crumb.label}
                       </BreadcrumbLink>
                     ) : (
-                      <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                      <BreadcrumbPage className="font-medium">{crumb.label}</BreadcrumbPage>
                     )}
                   </BreadcrumbItem>
                 </span>
               ))}
             </BreadcrumbList>
           </Breadcrumb>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="hidden md:inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+              </span>
+              All systems normal
+            </span>
+          </div>
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="relative flex-1 p-6 lg:p-8">
+          <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] overflow-hidden">
+            <div
+              className="ambient-blob"
+              style={{
+                top: "-120px",
+                left: "-80px",
+                width: "420px",
+                height: "420px",
+                background:
+                  "radial-gradient(circle at 30% 30%, oklch(from var(--brand) l c h / 0.18), transparent 70%)",
+              }}
+            />
+            <div
+              className="ambient-blob"
+              style={{
+                top: "-160px",
+                right: "-120px",
+                width: "520px",
+                height: "520px",
+                background:
+                  "radial-gradient(circle at 70% 30%, oklch(from var(--success) l c h / 0.14), transparent 70%)",
+              }}
+            />
+          </div>
+          {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

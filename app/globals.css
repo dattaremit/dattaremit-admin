@@ -210,6 +210,16 @@
   100% { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes fade-up {
+  0% { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -218,10 +228,16 @@
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
   }
 
   body {
     @apply bg-background text-foreground;
+    letter-spacing: -0.005em;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.022em;
   }
 
   ::selection {
@@ -244,4 +260,55 @@
   );
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
+}
+
+@utility animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility animate-fade-in {
+  animation: fade-in 0.6s ease-out both;
+}
+
+/* Subtle dotted ambient background for the app shell */
+@utility bg-ambient {
+  background-image:
+    radial-gradient(
+      circle at 1px 1px,
+      oklch(from var(--foreground) l c h / 0.045) 1px,
+      transparent 0
+    );
+  background-size: 22px 22px;
+}
+
+/* Soft elevated surface — used as an alternative to default Card */
+@utility surface {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 0 oklch(from var(--foreground) l c h / 0.02) inset,
+    0 1px 2px oklch(from var(--foreground) l c h / 0.04),
+    0 12px 32px -16px oklch(from var(--foreground) l c h / 0.08);
+}
+
+/* Brand gradient text — for the most important page-level headings */
+@utility text-gradient-brand {
+  background: linear-gradient(
+    135deg,
+    var(--foreground) 0%,
+    oklch(from var(--brand) l c h) 60%,
+    oklch(from var(--brand-soft) l c h) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Decorative ambient blob for hero/header areas */
+@utility ambient-blob {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  filter: blur(56px);
+  opacity: 0.55;
 }
