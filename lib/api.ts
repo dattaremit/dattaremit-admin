@@ -109,12 +109,17 @@ export interface User {
   zynkDepositAccountId: string | null;
   indianKycStatus: "NONE" | "PENDING" | "APPROVED" | "REJECTED" | "FAILED";
   instantTransfer: boolean;
+  // Admin-only fee tier. The user-facing API never returns this field;
+  // only admin endpoints surface it.
+  rateFlag: "ZERO" | "SMALL" | "MEDIUM" | "HIGH";
   created_at: string;
   updated_at: string;
   addresses?: Address[];
   activities?: Activity[];
   _count?: { addresses: number };
 }
+
+export type RateFlag = User["rateFlag"];
 
 export interface Address {
   id: string;
@@ -209,7 +214,10 @@ export type SettingsKey =
   | "NOTIFY_KYC_ALERTS"
   | "NOTIFY_NEW_USER_ALERTS"
   | "NOTIFY_ALERT_EMAIL"
-  | "NOTIFY_WEBHOOK_URL";
+  | "NOTIFY_WEBHOOK_URL"
+  | "DEVELOPER_FEE_SMALL_MULTIPLIER"
+  | "DEVELOPER_FEE_MEDIUM_MULTIPLIER"
+  | "DEVELOPER_FEE_HIGH_MULTIPLIER";
 
 export interface AppSettings {
   [key: string]: {
@@ -336,6 +344,7 @@ export interface UpdateUserPayload {
   dateOfBirth?: string;
   nationality?: string;
   referValue?: number;
+  rateFlag?: RateFlag;
 }
 
 export const api = {

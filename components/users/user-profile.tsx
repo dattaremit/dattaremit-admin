@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, Phone, Globe, Calendar, Shield, Gift, Zap } from "lucide-react";
+import { Mail, Phone, Globe, Calendar, Shield, Gift, Zap, Percent } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -24,6 +24,7 @@ interface UserProfileProps {
     referCode?: string | null;
     referredByCode?: string | null;
     referValue?: number;
+    rateFlag?: "ZERO" | "SMALL" | "MEDIUM" | "HIGH";
     instantTransfer: boolean;
     created_at: string;
     clerkUserId: string;
@@ -98,6 +99,12 @@ export function UserProfile({ user, instantTransferLoading, onInstantTransferTog
             icon={Gift}
             label="Refer Value"
             value={String(user.referValue ?? 1)}
+          />
+          <Separator />
+          <InfoRow
+            icon={Percent}
+            label="Rate Flag (internal)"
+            value={user.rateFlag ?? "HIGH"}
           />
           <Separator />
           <div className="flex items-center justify-between">

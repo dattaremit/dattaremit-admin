@@ -13,13 +13,27 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { api, type User } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { api, type RateFlag, type User } from "@/lib/api";
 import { UserIdentityFields } from "@/components/users/user-identity-fields";
 import { useUserIdentityForm } from "@/hooks/use-user-identity-form";
 import {
   userIdentitySchema,
   referValueSchema,
 } from "@/schemas/user-identity.schema";
+
+const RATE_FLAG_OPTIONS: { value: RateFlag; label: string; hint: string }[] = [
+  { value: "ZERO", label: "Zero", hint: "No developer fee taken" },
+  { value: "SMALL", label: "Small", hint: "Smallest carve-out of FX margin" },
+  { value: "MEDIUM", label: "Medium", hint: "Mid carve-out of FX margin" },
+  { value: "HIGH", label: "High", hint: "Full configured carve-out (default)" },
+];
 
 interface EditUserDialogProps {
   user: User;
@@ -45,10 +59,12 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
 
   const { values, setValue, reset } = useUserIdentityForm(userToIdentity(user));
   const [referValue, setReferValue] = useState(user.referValue ?? 1);
+  const [rateFlag, setRateFlag] = useState<RateFlag>(user.rateFlag ?? "HIGH");
 
   useEffect(() => {
     reset(userToIdentity(user));
     setReferValue(user.referValue ?? 1);
+    setRateFlag(user.rateFlag ?? "HIGH");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -73,6 +89,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
         ...parsed.data,
         nationality: parsed.data.nationality || undefined,
         referValue: parsedRefer.data,
+        rateFlag,
       });
 
       toast.success("User updated successfully");
@@ -109,6 +126,26 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
                 setReferValue(Number.isFinite(n) && n >= 1 ? n : 1);
               }}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-rateFlag">Rate Flag</Label>
+            <Select value={rateFlag} onValueChange={(v) => setRateFlag(v as RateFlag)}>
+              <SelectTrigger id="edit-rateFlag">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RATE_FLAG_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label} — {opt.hint}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Internal fee tier — controls the share of the FX margin we capture
+              on this user&apos;s transfers. Never shown to the user.
+            </p>
           </div>
 
           <DialogFooter>

@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneralSettingsForm } from "@/components/settings/general-settings-form";
 import { NotificationSettingsForm } from "@/components/settings/notification-settings-form";
 import { TransferLimitsForm } from "@/components/settings/transfer-limits-form";
+import { DeveloperFeeForm } from "@/components/settings/developer-fee-form";
 import { AccessControlSettingsForm } from "@/components/settings/access-control-settings-form";
 
 export default function SettingsPage() {
@@ -31,6 +32,7 @@ export default function SettingsPage() {
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="transfer-limits">Transfer Limits</TabsTrigger>
+          <TabsTrigger value="developer-fee">Developer Fee</TabsTrigger>
           <TabsTrigger value="access-control">Access Control</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
@@ -42,6 +44,10 @@ export default function SettingsPage() {
 
         <TabsContent value="transfer-limits" className="space-y-6">
           <TransferLimitsForm />
+        </TabsContent>
+
+        <TabsContent value="developer-fee" className="space-y-6">
+          <DeveloperFeeForm />
         </TabsContent>
 
         <TabsContent value="access-control" className="space-y-6">
