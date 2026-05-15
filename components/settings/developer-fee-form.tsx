@@ -8,6 +8,8 @@ import { Save, Percent, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Form,
   FormControl,
@@ -39,6 +41,12 @@ const developerFeeSchema = z.object({
 type DeveloperFeeFormValues = z.infer<typeof developerFeeSchema>;
 
 export function DeveloperFeeForm() {
+  const enabled = useSettingsKey<boolean>(
+    "DEVELOPER_FEE_ENABLED",
+    (raw) => raw === "true",
+    false,
+    "Failed to load developer fee settings",
+  );
   const small = useSettingsKey<string>(
     "DEVELOPER_FEE_SMALL_MULTIPLIER",
     (raw) => raw,
@@ -58,13 +66,39 @@ export function DeveloperFeeForm() {
     "Failed to load developer fee settings",
   );
 
-  const loading = small.loading || medium.loading || high.loading;
-  const lastUpdated = [small.lastUpdated, medium.lastUpdated, high.lastUpdated]
+  const loading = enabled.loading || small.loading || medium.loading || high.loading;
+  const lastUpdated = [
+    enabled.lastUpdated,
+    small.lastUpdated,
+    medium.lastUpdated,
+    high.lastUpdated,
+  ]
     .filter((t): t is string => Boolean(t))
     .sort()
     .at(-1) ?? null;
 
   const [saving, setSaving] = useState(false);
+  const [toggling, setToggling] = useState(false);
+
+  async function onToggle(checked: boolean) {
+    setToggling(true);
+    const previous = enabled.value;
+    enabled.setValue(checked);
+    try {
+      await api.updateSetting("DEVELOPER_FEE_ENABLED", checked ? "true" : "false");
+      enabled.setLastUpdated(new Date().toISOString());
+      toast.success(checked ? "Developer fee enabled" : "Developer fee disabled", {
+        description: checked
+          ? "Transfers will probe-simulate then re-simulate with the per-user multiplier applied."
+          : "Transfers hit Zynk simulate once — multipliers stay configured but are not applied.",
+      });
+    } catch (err) {
+      enabled.setValue(previous);
+      toast.error(err instanceof Error ? err.message : "Failed to update setting");
+    } finally {
+      setToggling(false);
+    }
+  }
 
   const form = useForm<DeveloperFeeFormValues>({
     resolver: zodResolver(developerFeeSchema),
@@ -104,78 +138,114 @@ export function DeveloperFeeForm() {
 
   return (
     <SettingsCard
-      title="Developer Fee Multipliers"
+      title="Developer Fee"
       icon={Percent}
-      description="Per-tier multiplier applied to the FX margin to compute each user's developer fee. Each user's tier is set on their profile."
+      description="Master switch and per-tier multipliers for the FX-margin developer fee. When disabled, transfers hit Zynk simulate once and no fee is charged."
       loading={loading}
     >
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="small"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Small Multiplier</FormLabel>
-                <FormControl>
-                  <Input type="number" step="0.01" placeholder="0.50" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Applied when the user&apos;s rate flag is SMALL. 0 disables
-                  the fee for these users; 1.0 takes the full margin.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label htmlFor="developer-fee-enabled">Developer fee</Label>
+            <p className="text-sm text-muted-foreground">
+              Off by default. Turn on once an upstream FX-rate endpoint exists
+              — until then, charging the fee forces a wasted probe simulate.
+            </p>
+          </div>
+          <Switch
+            id="developer-fee-enabled"
+            checked={enabled.value}
+            disabled={toggling}
+            onCheckedChange={onToggle}
           />
+        </div>
 
-          <FormField
-            control={form.control}
-            name="medium"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Medium Multiplier</FormLabel>
-                <FormControl>
-                  <Input type="number" step="0.01" placeholder="0.75" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Applied when the user&apos;s rate flag is MEDIUM.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="small"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Small Multiplier</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.50"
+                      disabled={!enabled.value}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Applied when the user&apos;s rate flag is SMALL. 0 disables
+                    the fee for these users; 1.0 takes the full margin.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="high"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>High Multiplier</FormLabel>
-                <FormControl>
-                  <Input type="number" step="0.01" placeholder="1.00" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Applied when the user&apos;s rate flag is HIGH (default for
-                  new users).
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="medium"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Medium Multiplier</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.75"
+                      disabled={!enabled.value}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Applied when the user&apos;s rate flag is MEDIUM.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <LastUpdated at={lastUpdated} />
+            <FormField
+              control={form.control}
+              name="high"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>High Multiplier</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="1.00"
+                      disabled={!enabled.value}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Applied when the user&apos;s rate flag is HIGH (default for
+                    new users).
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <Button type="submit" disabled={saving}>
-            {saving ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="mr-2 h-4 w-4" />
-            )}
-            Save Multipliers
-          </Button>
-        </form>
-      </Form>
+            <LastUpdated at={lastUpdated} />
+
+            <Button type="submit" disabled={saving || !enabled.value}>
+              {saving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Save Multipliers
+            </Button>
+          </form>
+        </Form>
+      </div>
     </SettingsCard>
   );
 }
