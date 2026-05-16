@@ -52,3 +52,31 @@ All authenticated pages live under `app/(dashboard)/`:
 ## Path Alias
 
 `@/*` maps to the project root (`tsconfig.json`).
+
+## Docker
+
+Multi-stage build producing a small, non-root image based on Next.js [standalone output](https://nextjs.org/docs/app/api-reference/config/next-config-js/output).
+
+### 1. Create `.env` in the repo root
+
+```dotenv
+# Build-time — inlined into the client bundle, must be present at `docker build`
+NEXT_PUBLIC_API_URL=http://host.docker.internal:5000/api
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxx
+
+# Runtime — server-only secret
+CLERK_SECRET_KEY=sk_test_xxx
+```
+
+`NEXT_PUBLIC_*` values are inlined into the client bundle at build time, so they must be set before `docker compose up --build`. `NEXT_PUBLIC_CLERK_SIGN_IN_URL` / `SIGN_UP_URL` / fallback URLs have sane defaults in `docker-compose.yml` — only override if you need to.
+
+### 2. Build and run
+
+```bash
+docker compose up --build         # foreground
+docker compose up --build -d      # detached
+docker compose down               # stop
+```
+
+App is served at http://localhost:3000.
+
