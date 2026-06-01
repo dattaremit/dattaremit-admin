@@ -32,10 +32,24 @@ const multiplierField = z
   .refine((v) => parseFloat(v) >= 0, "Must be 0 or greater")
   .refine((v) => parseFloat(v) <= 5, "Must be 5 or lower");
 
+const zynkBpsField = z
+  .string()
+  .regex(/^\d+$/, "Must be a whole number of basis points")
+  .refine((v) => parseFloat(v) >= 0, "Must be 0 or greater")
+  .refine((v) => parseFloat(v) <= 1000, "Must be 1000 or lower");
+
+const infraRateField = z
+  .string()
+  .regex(/^\d+(\.\d{1,6})?$/, "Must be a decimal fraction with up to 6 decimals")
+  .refine((v) => parseFloat(v) >= 0, "Must be 0 or greater")
+  .refine((v) => parseFloat(v) <= 0.1, "Must be 0.1 or lower");
+
 const developerFeeSchema = z.object({
   small: multiplierField,
   medium: multiplierField,
   high: multiplierField,
+  zynkBps: zynkBpsField,
+  infraRate: infraRateField,
 });
 
 type DeveloperFeeFormValues = z.infer<typeof developerFeeSchema>;
@@ -65,13 +79,33 @@ export function DeveloperFeeForm() {
     "1.00",
     "Failed to load developer fee settings",
   );
+  const zynkBps = useSettingsKey<string>(
+    "DEVELOPER_FEE_ZYNK_BPS",
+    (raw) => raw,
+    "20",
+    "Failed to load developer fee settings",
+  );
+  const infraRate = useSettingsKey<string>(
+    "DEVELOPER_FEE_INFRA_RATE",
+    (raw) => raw,
+    "0",
+    "Failed to load developer fee settings",
+  );
 
-  const loading = enabled.loading || small.loading || medium.loading || high.loading;
+  const loading =
+    enabled.loading ||
+    small.loading ||
+    medium.loading ||
+    high.loading ||
+    zynkBps.loading ||
+    infraRate.loading;
   const lastUpdated = [
     enabled.lastUpdated,
     small.lastUpdated,
     medium.lastUpdated,
     high.lastUpdated,
+    zynkBps.lastUpdated,
+    infraRate.lastUpdated,
   ]
     .filter((t): t is string => Boolean(t))
     .sort()
@@ -102,7 +136,7 @@ export function DeveloperFeeForm() {
 
   const form = useForm<DeveloperFeeFormValues>({
     resolver: zodResolver(developerFeeSchema),
-    defaultValues: { small: "0.50", medium: "0.75", high: "1.00" },
+    defaultValues: { small: "0.50", medium: "0.75", high: "1.00", zynkBps: "20", infraRate: "0" },
   });
 
   useEffect(() => {
@@ -111,10 +145,12 @@ export function DeveloperFeeForm() {
         small: small.value,
         medium: medium.value,
         high: high.value,
+        zynkBps: zynkBps.value,
+        infraRate: infraRate.value,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, small.value, medium.value, high.value]);
+  }, [loading, small.value, medium.value, high.value, zynkBps.value, infraRate.value]);
 
   async function onSubmit(data: DeveloperFeeFormValues) {
     setSaving(true);
@@ -124,13 +160,17 @@ export function DeveloperFeeForm() {
       await api.updateSetting("DEVELOPER_FEE_SMALL_MULTIPLIER", data.small);
       await api.updateSetting("DEVELOPER_FEE_MEDIUM_MULTIPLIER", data.medium);
       await api.updateSetting("DEVELOPER_FEE_HIGH_MULTIPLIER", data.high);
+      await api.updateSetting("DEVELOPER_FEE_ZYNK_BPS", data.zynkBps);
+      await api.updateSetting("DEVELOPER_FEE_INFRA_RATE", data.infraRate);
       const now = new Date().toISOString();
       small.setLastUpdated(now);
       medium.setLastUpdated(now);
       high.setLastUpdated(now);
-      toast.success("Developer fee multipliers saved");
+      zynkBps.setLastUpdated(now);
+      infraRate.setLastUpdated(now);
+      toast.success("Developer fee settings saved");
     } catch {
-      toast.error("Failed to save developer fee multipliers");
+      toast.error("Failed to save developer fee settings");
     } finally {
       setSaving(false);
     }
@@ -233,6 +273,54 @@ export function DeveloperFeeForm() {
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="zynkBps"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Zynk Fee (bps)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="1"
+                      placeholder="20"
+                      disabled={!enabled.value}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Zynk&apos;s own carve, in basis points (the &ldquo;20&rdquo;).
+                    Subtracted from the FX spread as (bps + 1) / 10000.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="infraRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Infra Fee (fraction)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.0001"
+                      placeholder="0"
+                      disabled={!enabled.value}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Infra fee carved out of the spread, as a decimal fraction
+                    (e.g. 0.001 = 0.1%). 0 disables it.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <LastUpdated at={lastUpdated} />
 
             <Button type="submit" disabled={saving || !enabled.value}>
@@ -241,7 +329,7 @@ export function DeveloperFeeForm() {
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              Save Multipliers
+              Save Settings
             </Button>
           </form>
         </Form>
