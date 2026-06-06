@@ -210,6 +210,7 @@ export interface MarketingStats {
 export type SettingsKey =
   | "WEEKLY_TRANSFER_LIMIT_USD"
   | "WAITLIST_ENABLED"
+  | "RECIPIENT_KYC_ENABLED"
   | "NOTIFY_EMAIL_ENABLED"
   | "NOTIFY_KYC_ALERTS"
   | "NOTIFY_NEW_USER_ALERTS"
@@ -546,6 +547,15 @@ export const api = {
       method: "PUT",
       body: JSON.stringify({
         key: "WAITLIST_ENABLED",
+        value: enabled ? "true" : "false",
+      }),
+    }),
+
+  setRecipientKycEnabled: (enabled: boolean) =>
+    adminFetch<ApiResponse<unknown>>("/settings", {
+      method: "PUT",
+      body: JSON.stringify({
+        key: "RECIPIENT_KYC_ENABLED",
         value: enabled ? "true" : "false",
       }),
     }),

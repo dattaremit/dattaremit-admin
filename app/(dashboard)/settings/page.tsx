@@ -17,6 +17,7 @@ import { NotificationSettingsForm } from "@/components/settings/notification-set
 import { TransferLimitsForm } from "@/components/settings/transfer-limits-form";
 import { DeveloperFeeForm } from "@/components/settings/developer-fee-form";
 import { AccessControlSettingsForm } from "@/components/settings/access-control-settings-form";
+import { RecipientKycSettingsForm } from "@/components/settings/recipient-kyc-settings-form";
 
 export default function SettingsPage() {
   return (
@@ -33,6 +34,7 @@ export default function SettingsPage() {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="transfer-limits">Transfer Limits</TabsTrigger>
           <TabsTrigger value="developer-fee">Developer Fee</TabsTrigger>
+          <TabsTrigger value="recipients">Recipients</TabsTrigger>
           <TabsTrigger value="access-control">Access Control</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
@@ -48,6 +50,10 @@ export default function SettingsPage() {
 
         <TabsContent value="developer-fee" className="space-y-6">
           <DeveloperFeeForm />
+        </TabsContent>
+
+        <TabsContent value="recipients" className="space-y-6">
+          <RecipientKycSettingsForm />
         </TabsContent>
 
         <TabsContent value="access-control" className="space-y-6">
