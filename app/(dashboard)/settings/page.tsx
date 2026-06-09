@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneralSettingsForm } from "@/components/settings/general-settings-form";
 import { NotificationSettingsForm } from "@/components/settings/notification-settings-form";
 import { TransferLimitsForm } from "@/components/settings/transfer-limits-form";
+import { NreSelfTransferFeeForm } from "@/components/settings/nre-self-transfer-fee-form";
 import { DeveloperFeeForm } from "@/components/settings/developer-fee-form";
 import { AccessControlSettingsForm } from "@/components/settings/access-control-settings-form";
 import { RecipientKycSettingsForm } from "@/components/settings/recipient-kyc-settings-form";
@@ -46,6 +47,7 @@ export default function SettingsPage() {
 
         <TabsContent value="transfer-limits" className="space-y-6">
           <TransferLimitsForm />
+          <NreSelfTransferFeeForm />
         </TabsContent>
 
         <TabsContent value="developer-fee" className="space-y-6">
@@ -100,17 +102,17 @@ export default function SettingsPage() {
                   <Label>API Security</Label>
                   <p className="mt-1 text-sm text-muted-foreground">
                     The server is protected with Helmet security headers, CORS
-                    policy, and rate limiting (200 requests per 15 minutes). Admin
-                    endpoints use a separate authentication middleware.
+                    policy, and rate limiting (200 requests per 15 minutes).
+                    Admin endpoints use a separate authentication middleware.
                   </p>
                 </div>
                 <Separator />
                 <div>
                   <Label>Data Encryption</Label>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    User PII (email, phone number, date of birth) is encrypted at
-                    rest using AES-256 encryption. Email lookups use HMAC-SHA256
-                    hashing.
+                    User PII (email, phone number, date of birth) is encrypted
+                    at rest using AES-256 encryption. Email lookups use
+                    HMAC-SHA256 hashing.
                   </p>
                 </div>
               </div>

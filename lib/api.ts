@@ -227,7 +227,8 @@ export type SettingsKey =
   | "DEVELOPER_FEE_MEDIUM_MULTIPLIER"
   | "DEVELOPER_FEE_HIGH_MULTIPLIER"
   | "DEVELOPER_FEE_ZYNK_BPS"
-  | "DEVELOPER_FEE_INFRA_RATE";
+  | "DEVELOPER_FEE_INFRA_RATE"
+  | "NRE_SELF_TRANSFER_FEE_RATE";
 
 export interface AppSettings {
   [key: string]: {
@@ -391,18 +392,19 @@ export interface UpdateUserPayload {
 }
 
 export const api = {
-  getDashboardStats: () =>
-    adminFetch<ApiResponse<DashboardStats>>("/stats"),
+  getDashboardStats: () => adminFetch<ApiResponse<DashboardStats>>("/stats"),
 
   getUsers: (page = 1, limit = 20, search?: string, status?: string) => {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
     if (search) params.set("search", search);
     if (status) params.set("status", status);
     return adminFetch<ApiResponse<PaginatedResponse<User>>>(`/users?${params}`);
   },
 
-  getUserById: (id: string) =>
-    adminFetch<ApiResponse<User>>(`/users/${id}`),
+  getUserById: (id: string) => adminFetch<ApiResponse<User>>(`/users/${id}`),
 
   getRecipients: (
     page = 1,
@@ -425,15 +427,21 @@ export const api = {
     adminFetch<ApiResponse<RecipientDetail>>(`/recipients/${id}`),
 
   getActivities: (page = 1, limit = 20, filters: ActivityFilters = {}) => {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
     if (filters.type) params.set("type", filters.type);
     if (filters.status) params.set("status", filters.status);
     if (filters.actorId) params.set("actorId", filters.actorId);
-    if (filters.subjectUserId) params.set("subjectUserId", filters.subjectUserId);
+    if (filters.subjectUserId)
+      params.set("subjectUserId", filters.subjectUserId);
     if (filters.referenceId) params.set("referenceId", filters.referenceId);
     if (filters.from) params.set("from", filters.from);
     if (filters.to) params.set("to", filters.to);
-    return adminFetch<ApiResponse<PaginatedResponse<Activity>>>(`/activities?${params}`);
+    return adminFetch<ApiResponse<PaginatedResponse<Activity>>>(
+      `/activities?${params}`,
+    );
   },
 
   /**
@@ -446,7 +454,8 @@ export const api = {
     if (filters.type) params.set("type", filters.type);
     if (filters.status) params.set("status", filters.status);
     if (filters.actorId) params.set("actorId", filters.actorId);
-    if (filters.subjectUserId) params.set("subjectUserId", filters.subjectUserId);
+    if (filters.subjectUserId)
+      params.set("subjectUserId", filters.subjectUserId);
     if (filters.referenceId) params.set("referenceId", filters.referenceId);
     if (filters.from) params.set("from", filters.from);
     if (filters.to) params.set("to", filters.to);
@@ -462,8 +471,9 @@ export const api = {
     }
     const blob = await res.blob();
     const filename =
-      res.headers.get("Content-Disposition")?.match(/filename="?([^";]+)/)?.[1] ??
-      `activities-${Date.now()}.csv`;
+      res.headers
+        .get("Content-Disposition")
+        ?.match(/filename="?([^";]+)/)?.[1] ?? `activities-${Date.now()}.csv`;
     const truncated = res.headers.get("X-Truncated") === "true";
     const total = Number(res.headers.get("X-Total-Count") ?? 0);
     return { blob, filename, truncated, total };
@@ -482,7 +492,10 @@ export const api = {
     adminFetch<ApiResponse<TypeCount[]>>("/charts/kyc"),
 
   getReferralStats: (page = 1, limit = 20, search?: string) => {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
     if (search) params.set("search", search);
     return adminFetch<ApiResponse<ReferralStats>>(`/referral-stats?${params}`);
   },
@@ -504,7 +517,10 @@ export const api = {
       method: "DELETE",
     }),
 
-  changeUserRole: (id: string, role: "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER") =>
+  changeUserRole: (
+    id: string,
+    role: "ADMIN" | "USER" | "INFLUENCER" | "PROMOTER",
+  ) =>
     adminFetch<ApiResponse<User>>(`/users/${id}/role`, {
       method: "PATCH",
       body: JSON.stringify({ role }),
@@ -519,7 +535,9 @@ export const api = {
   // Marketing
   previewReferCode: (firstName: string, lastName: string) => {
     const params = new URLSearchParams({ firstName, lastName });
-    return adminFetch<ApiResponse<{ referCode: string }>>(`/marketing/promoters/preview-refer-code?${params}`);
+    return adminFetch<ApiResponse<{ referCode: string }>>(
+      `/marketing/promoters/preview-refer-code?${params}`,
+    );
   },
 
   createPromoter: (data: CreatePromoterPayload) =>
@@ -529,18 +547,22 @@ export const api = {
     }),
 
   getPromoters: (page = 1, limit = 20, search?: string, role?: string) => {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
     if (search) params.set("search", search);
     if (role) params.set("role", role);
-    return adminFetch<ApiResponse<PromoterPaginatedResponse>>(`/marketing/promoters?${params}`);
+    return adminFetch<ApiResponse<PromoterPaginatedResponse>>(
+      `/marketing/promoters?${params}`,
+    );
   },
 
   getMarketingStats: () =>
     adminFetch<ApiResponse<MarketingStats>>("/marketing/stats"),
 
   // Settings
-  getSettings: () =>
-    adminFetch<ApiResponse<AppSettings>>("/settings"),
+  getSettings: () => adminFetch<ApiResponse<AppSettings>>("/settings"),
 
   updateSetting: (key: SettingsKey, value: string) =>
     adminFetch<ApiResponse<unknown>>("/settings", {
