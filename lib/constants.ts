@@ -9,6 +9,28 @@ export const STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
   FAILED: "destructive",
 };
 
+export const TRANSACTION_STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
+  COMPLETED: "default",
+  ACCEPTED: "secondary",
+  PROCESSING: "secondary",
+  SIMULATED: "outline",
+  FAILED: "destructive",
+};
+
+export const TRANSACTION_STATUSES = [
+  "SIMULATED",
+  "ACCEPTED",
+  "PROCESSING",
+  "COMPLETED",
+  "FAILED",
+] as const;
+
+export const TRANSACTION_PAYOUT_PROVIDERS = [
+  "ZYNK_DIRECT",
+  "ZYNK_TO_CREDIBLE",
+  "ZYNK_TO_DCX",
+] as const;
+
 export const ACTIVITY_TYPES = [
   "DEPOSIT",
   "WITHDRAWAL",
@@ -33,7 +55,12 @@ export const ROLE_BADGE_VARIANT: Record<string, BadgeVariant> = {
   PROMOTER: "secondary",
 };
 
-export const ACCOUNT_STATUSES = ["INITIAL", "ACTIVE", "PENDING", "REJECTED"] as const;
+export const ACCOUNT_STATUSES = [
+  "INITIAL",
+  "ACTIVE",
+  "PENDING",
+  "REJECTED",
+] as const;
 
 export const ACTIVITY_STATUSES = ["PENDING", "COMPLETE", "FAILED"] as const;
 

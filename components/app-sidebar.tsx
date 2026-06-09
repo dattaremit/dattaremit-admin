@@ -14,6 +14,7 @@ import {
   Gift,
   Megaphone,
   ShieldCheck,
+  ArrowLeftRight,
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,12 @@ const navSections: {
       { title: "Users", href: "/users", icon: Users },
       { title: "Recipients", href: "/recipients", icon: UserSearch },
       { title: "Activities", href: "/activities", icon: Activity },
+    ],
+  },
+  {
+    label: "Money",
+    items: [
+      { title: "Transactions", href: "/transactions", icon: ArrowLeftRight },
     ],
   },
   {

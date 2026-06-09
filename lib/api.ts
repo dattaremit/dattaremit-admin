@@ -261,6 +261,7 @@ export interface PaginatedResponse<T> {
   users?: T[];
   activities?: T[];
   recipients?: T[];
+  transactions?: T[];
   total: number;
   page: number;
   limit: number;
@@ -310,6 +311,115 @@ export interface NreBankAccountAdmin {
   accountStatus: string | null;
   isPrimary: boolean;
   created_at?: string;
+}
+
+export type TransactionStatus =
+  | "SIMULATED"
+  | "ACCEPTED"
+  | "PROCESSING"
+  | "COMPLETED"
+  | "FAILED";
+
+export type TransactionPayoutProvider =
+  | "ZYNK_DIRECT"
+  | "ZYNK_TO_CREDIBLE"
+  | "ZYNK_TO_DCX";
+
+// Row shape for the transactions table.
+export interface TransactionListItem {
+  id: string;
+  zynkTransactionId: string;
+  status: TransactionStatus;
+  payoutProvider: TransactionPayoutProvider;
+  destinationEntity: string | null;
+  sendAmount: number | null;
+  sendCurrency: string;
+  receiveAmount: number | null;
+  receiveCurrency: string;
+  exchangeRate: number | null;
+  totalFees: number | null;
+  feeCurrency: string | null;
+  developerFeeAmount: number | null;
+  sender: { id: string; name: string; email: string | null };
+  counterparty: { type: "recipient" | "user" | "self"; name: string };
+  created_at: string;
+}
+
+// Full detail for the transaction detail page.
+export interface TransactionDetail {
+  id: string;
+  zynkTransactionId: string;
+  zynkExecutionId: string | null;
+  status: TransactionStatus;
+  payoutProvider: TransactionPayoutProvider;
+  destinationEntity: string | null;
+  depositMemo: string | null;
+  failureReason: string | null;
+  created_at: string;
+  updated_at: string;
+  amounts: {
+    sendAmount: number | null;
+    sendCurrency: string;
+    receiveAmount: number | null;
+    receiveCurrency: string;
+    exchangeRate: number | null;
+    liveRate: number | null;
+    totalFees: number | null;
+    feeCurrency: string | null;
+    developerFeeRate: number | null;
+    developerFeeAmount: number | null;
+  };
+  sender: {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    zynkEntityId: string | null;
+    zynkExternalAccountId: string | null;
+    credibleExternalAccountId: string | null;
+  } | null;
+  receiver: { id: string; name: string; email: string | null } | null;
+  recipient: {
+    id: string;
+    name: string;
+    email: string | null;
+    kycStatus: string | null;
+    zynkEntityId: string | null;
+    credibleExternalAccountId: string | null;
+  } | null;
+  bankDetails: BankDetailsAdmin | null;
+  nreBankAccount: NreBankAccountAdmin | null;
+  credible: {
+    id: string;
+    purpose: string;
+    status: string;
+    merchantPayoutId: string;
+    crediblePayoutId: string | null;
+    senderCustomerId: string;
+    receiverCustomerId: string | null;
+    inputAmount: number | null;
+    inputCurrency: string;
+    outputAmount: number | null;
+    outputCurrency: string;
+    fxRateAtPayout: number | null;
+    isSelfTransfer: boolean;
+    transactionReferenceNo: string | null;
+    failureReason: string | null;
+    completedAt: string | null;
+    failedAt: string | null;
+    created_at: string;
+  } | null;
+  simulateResponse: unknown;
+  transferResponse: unknown;
+}
+
+export interface TransactionFilters {
+  search?: string;
+  status?: string;
+  payoutProvider?: string;
+  from?: string;
+  to?: string;
+  [key: string]: string | undefined;
 }
 
 export interface RecipientSummary {
@@ -425,6 +535,25 @@ export const api = {
 
   getRecipientById: (id: string) =>
     adminFetch<ApiResponse<RecipientDetail>>(`/recipients/${id}`),
+
+  getTransactions: (page = 1, limit = 20, filters: TransactionFilters = {}) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (filters.search) params.set("search", filters.search);
+    if (filters.status) params.set("status", filters.status);
+    if (filters.payoutProvider)
+      params.set("payoutProvider", filters.payoutProvider);
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+    return adminFetch<ApiResponse<PaginatedResponse<TransactionListItem>>>(
+      `/transactions?${params}`,
+    );
+  },
+
+  getTransactionById: (id: string) =>
+    adminFetch<ApiResponse<TransactionDetail>>(`/transactions/${id}`),
 
   getActivities: (page = 1, limit = 20, filters: ActivityFilters = {}) => {
     const params = new URLSearchParams({
