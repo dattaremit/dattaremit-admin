@@ -119,6 +119,9 @@ export interface User {
   // The user's own saved bank accounts. Returned by the user-detail endpoint
   // (GET /admin/users/:id) with the FULL account number for manual payout.
   banks?: BankDetailsAdmin[];
+  // The user's own NRE bank account (at most one), if added. Full details for
+  // manual payout. Null/absent when the user has not added an NRE account.
+  nreBankAccount?: NreBankAccountAdmin | null;
   _count?: { addresses: number };
 }
 
@@ -288,6 +291,23 @@ export interface BankDetailsAdmin {
   branchName: string | null;
   bankAccountType: string | null;
   isDefault: boolean;
+  created_at?: string;
+}
+
+// Admin-only shape for the user's own NRE bank account (separate model, carries
+// SWIFT + currency). Full account number, same manual-payout rationale.
+export interface NreBankAccountAdmin {
+  id: string;
+  accountType: string | null;
+  bankName: string | null;
+  branchName: string | null;
+  accountHolderName: string | null;
+  accountNumber: string | null;
+  ifscCode: string | null;
+  swiftCode: string | null;
+  currency: string | null;
+  accountStatus: string | null;
+  isPrimary: boolean;
   created_at?: string;
 }
 

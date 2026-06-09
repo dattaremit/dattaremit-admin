@@ -144,7 +144,8 @@ export default function UserDetailPage() {
             Addresses ({user.addresses?.length ?? 0})
           </TabsTrigger>
           <TabsTrigger value="banks">
-            Bank Accounts ({user.banks?.length ?? 0})
+            Bank Accounts (
+            {(user.banks?.length ?? 0) + (user.nreBankAccount ? 1 : 0)})
           </TabsTrigger>
           <TabsTrigger value="activities">
             Activities ({user.activities?.length ?? 0})
@@ -164,7 +165,10 @@ export default function UserDetailPage() {
         </TabsContent>
 
         <TabsContent value="banks">
-          <UserBankDetails banks={user.banks} />
+          <UserBankDetails
+            banks={user.banks}
+            nreBankAccount={user.nreBankAccount}
+          />
         </TabsContent>
 
         <TabsContent value="activities">
