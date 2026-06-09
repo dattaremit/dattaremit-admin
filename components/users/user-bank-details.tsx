@@ -17,10 +17,10 @@ import {
   Wallet,
 } from "lucide-react";
 import { InfoRow } from "@/components/info-row";
-import type { BankDetailsPublic } from "@/lib/api";
+import type { BankDetailsAdmin } from "@/lib/api";
 
 interface UserBankDetailsProps {
-  banks: BankDetailsPublic[] | undefined | null;
+  banks: BankDetailsAdmin[] | undefined | null;
 }
 
 export function UserBankDetails({ banks }: UserBankDetailsProps) {
@@ -59,7 +59,7 @@ export function UserBankDetails({ banks }: UserBankDetailsProps) {
                   <InfoRow
                     icon={CreditCard}
                     label="Account Number"
-                    value={bank.bankAccountNumberMasked ?? "—"}
+                    value={bank.bankAccountNumber ?? "—"}
                   />
                   <InfoRow
                     icon={Hash}

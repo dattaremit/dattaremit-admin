@@ -117,8 +117,8 @@ export interface User {
   addresses?: Address[];
   activities?: Activity[];
   // The user's own saved bank accounts. Returned by the user-detail endpoint
-  // (GET /admin/users/:id) with account numbers masked to last-4.
-  banks?: BankDetailsPublic[];
+  // (GET /admin/users/:id) with the FULL account number for manual payout.
+  banks?: BankDetailsAdmin[];
   _count?: { addresses: number };
 }
 
@@ -268,6 +268,22 @@ export interface BankDetailsPublic {
   bankName: string | null;
   bankAccountName: string | null;
   bankAccountNumberMasked: string | null;
+  bankIfsc: string | null;
+  branchName: string | null;
+  bankAccountType: string | null;
+  isDefault: boolean;
+  created_at?: string;
+}
+
+// Admin-only bank shape with the FULL (unmasked) account number, returned by
+// GET /admin/users/:id so an admin can manually key a bank transfer when an
+// automated payout fails.
+export interface BankDetailsAdmin {
+  id: string;
+  label: string | null;
+  bankName: string | null;
+  bankAccountName: string | null;
+  bankAccountNumber: string | null;
   bankIfsc: string | null;
   branchName: string | null;
   bankAccountType: string | null;
