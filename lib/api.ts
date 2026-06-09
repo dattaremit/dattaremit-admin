@@ -116,6 +116,9 @@ export interface User {
   updated_at: string;
   addresses?: Address[];
   activities?: Activity[];
+  // The user's own saved bank accounts. Returned by the user-detail endpoint
+  // (GET /admin/users/:id) with account numbers masked to last-4.
+  banks?: BankDetailsPublic[];
   _count?: { addresses: number };
 }
 

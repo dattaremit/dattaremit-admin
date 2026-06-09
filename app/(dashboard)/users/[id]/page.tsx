@@ -22,6 +22,7 @@ import { DeleteUserDialog } from "@/components/delete-user-dialog";
 import { ChangeRoleDialog } from "@/components/change-role-dialog";
 import { UserProfile } from "@/components/users/user-profile";
 import { UserAddresses } from "@/components/users/user-addresses";
+import { UserBankDetails } from "@/components/users/user-bank-details";
 import { UserActivityHistory } from "@/components/users/user-activity-history";
 
 const USER_ID_REGEX = /^[a-zA-Z0-9_-]{1,64}$/;
@@ -142,6 +143,9 @@ export default function UserDetailPage() {
           <TabsTrigger value="addresses">
             Addresses ({user.addresses?.length ?? 0})
           </TabsTrigger>
+          <TabsTrigger value="banks">
+            Bank Accounts ({user.banks?.length ?? 0})
+          </TabsTrigger>
           <TabsTrigger value="activities">
             Activities ({user.activities?.length ?? 0})
           </TabsTrigger>
@@ -157,6 +161,10 @@ export default function UserDetailPage() {
 
         <TabsContent value="addresses">
           <UserAddresses addresses={user.addresses} />
+        </TabsContent>
+
+        <TabsContent value="banks">
+          <UserBankDetails banks={user.banks} />
         </TabsContent>
 
         <TabsContent value="activities">
