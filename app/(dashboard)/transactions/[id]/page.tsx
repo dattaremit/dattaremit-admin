@@ -128,7 +128,7 @@ export default function TransactionDetailPage() {
         <Section title="Overview">
           <Row label="Status" value={tx.status} />
           <Row label="Payout route" value={tx.payoutProvider.replace(/_/g, " ")} />
-          <Row label="Destination label" value={tx.destinationEntity} />
+          <Row label="Destination label" value={tx.destinationName} />
           <Row label="Note / memo" value={tx.depositMemo} />
           <Row label="Failure reason" value={tx.failureReason} />
           <Row label="Zynk transaction id" value={tx.zynkTransactionId} mono />

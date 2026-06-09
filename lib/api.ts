@@ -331,7 +331,7 @@ export interface TransactionListItem {
   zynkTransactionId: string;
   status: TransactionStatus;
   payoutProvider: TransactionPayoutProvider;
-  destinationEntity: string | null;
+  destinationName: string | null;
   sendAmount: number | null;
   sendCurrency: string;
   receiveAmount: number | null;
@@ -352,7 +352,7 @@ export interface TransactionDetail {
   zynkExecutionId: string | null;
   status: TransactionStatus;
   payoutProvider: TransactionPayoutProvider;
-  destinationEntity: string | null;
+  destinationName: string | null;
   depositMemo: string | null;
   failureReason: string | null;
   created_at: string;
