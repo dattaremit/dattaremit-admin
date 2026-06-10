@@ -15,8 +15,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApiFetch } from "@/hooks/use-api-fetch";
 import { useFilteredTable } from "@/hooks/use-filtered-table";
-import { api, type DashboardStats } from "@/lib/api";
+import { api, type DashboardStats, type ReferralFunnel } from "@/lib/api";
 import { ReferralStatsCards } from "@/components/referrals/referral-stats-cards";
+import { ReferralFunnelCards } from "@/components/referrals/referral-funnel-cards";
 import {
   ReferrersTable,
   type Referrer,
@@ -24,6 +25,7 @@ import {
 
 interface StatsData {
   totalReferrals: number;
+  funnel: ReferralFunnel;
   dashStats: DashboardStats;
 }
 
@@ -42,6 +44,7 @@ export default function ReferralsPage() {
     ]);
     return {
       totalReferrals: refRes.data.totalReferrals,
+      funnel: refRes.data.funnel,
       dashStats: statsRes.data,
     };
   });
@@ -83,7 +86,7 @@ export default function ReferralsPage() {
   if (statsError) return <ErrorState message={statsError} onRetry={statsRefetch} />;
   if (!statsData) return null;
 
-  const { totalReferrals, dashStats } = statsData;
+  const { totalReferrals, funnel, dashStats } = statsData;
   const referralRate =
     dashStats.totalUsers > 0
       ? Math.round((totalReferrals / dashStats.totalUsers) * 100)
@@ -103,6 +106,16 @@ export default function ReferralsPage() {
         referralRate={referralRate}
         topReferrerCount={total}
       />
+
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">Referred user funnel</h2>
+          <p className="text-sm text-muted-foreground">
+            How far referred users progress — aggregate counts only, no individual data
+          </p>
+        </div>
+        <ReferralFunnelCards funnel={funnel} />
+      </div>
 
       <Card>
         <CardHeader>

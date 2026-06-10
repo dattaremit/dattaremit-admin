@@ -193,8 +193,19 @@ export interface StatusCount {
   count: number;
 }
 
+export interface ReferralFunnel {
+  totalReferrals: number;
+  completedKyc: number;
+  connectedBank: number;
+  addedRecipient: number;
+  completedTransfer: number;
+}
+
 export interface ReferralStats {
   totalReferrals: number;
+  // Platform-wide funnel of how far referred users have progressed (counts only,
+  // no per-user identities). funnel.totalReferrals === totalReferrals above.
+  funnel: ReferralFunnel;
   topReferrers: {
     id: string;
     firstName: string;
