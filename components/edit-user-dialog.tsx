@@ -30,9 +30,9 @@ import {
 
 const RATE_FLAG_OPTIONS: { value: RateFlag; label: string; hint: string }[] = [
   { value: "ZERO", label: "Zero", hint: "No developer fee taken" },
-  { value: "SMALL", label: "Small", hint: "Smallest carve-out of FX margin" },
-  { value: "MEDIUM", label: "Medium", hint: "Mid carve-out of FX margin" },
-  { value: "HIGH", label: "High", hint: "Full configured carve-out (default)" },
+  { value: "SMALL", label: "Small", hint: "Smallest share of the developer fee" },
+  { value: "MEDIUM", label: "Medium", hint: "Mid share of the developer fee" },
+  { value: "HIGH", label: "High", hint: "Largest share of the developer fee (default)" },
 ];
 
 interface EditUserDialogProps {
@@ -143,8 +143,9 @@ export function EditUserDialog({ user, open, onOpenChange, onSuccess }: EditUser
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Internal fee tier — controls the share of the FX margin we capture
-              on this user&apos;s transfers. Never shown to the user.
+              Internal fee tier — scales the developer fee charged on this
+              user&apos;s transfers (via the per-tier multiplier). Never shown to
+              the user.
             </p>
           </div>
 
