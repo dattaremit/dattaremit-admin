@@ -53,6 +53,7 @@ const developerFeeSchema = z.object({
   medium: multiplierField,
   high: multiplierField,
   zynkBps: zynkBpsField,
+  nreBps: zynkBpsField,
   bankingFeeUsd: bankingFeeField,
 });
 
@@ -89,6 +90,12 @@ export function DeveloperFeeForm() {
     "20",
     "Failed to load developer fee settings",
   );
+  const nreBps = useSettingsKey<string>(
+    "NRE_FEE_BPS",
+    (raw) => raw,
+    "10",
+    "Failed to load developer fee settings",
+  );
   const bankingFeeUsd = useSettingsKey<string>(
     "BANKING_FEE_USD",
     (raw) => raw,
@@ -102,6 +109,7 @@ export function DeveloperFeeForm() {
     medium.loading ||
     high.loading ||
     zynkBps.loading ||
+    nreBps.loading ||
     bankingFeeUsd.loading;
   const lastUpdated = [
     enabled.lastUpdated,
@@ -109,6 +117,7 @@ export function DeveloperFeeForm() {
     medium.lastUpdated,
     high.lastUpdated,
     zynkBps.lastUpdated,
+    nreBps.lastUpdated,
     bankingFeeUsd.lastUpdated,
   ]
     .filter((t): t is string => Boolean(t))
@@ -140,7 +149,14 @@ export function DeveloperFeeForm() {
 
   const form = useForm<DeveloperFeeFormValues>({
     resolver: zodResolver(developerFeeSchema),
-    defaultValues: { small: "0.3", medium: "0.6", high: "0.85", zynkBps: "20", bankingFeeUsd: "1" },
+    defaultValues: {
+      small: "0.3",
+      medium: "0.6",
+      high: "0.85",
+      zynkBps: "20",
+      nreBps: "10",
+      bankingFeeUsd: "1",
+    },
   });
 
   useEffect(() => {
@@ -150,11 +166,12 @@ export function DeveloperFeeForm() {
         medium: medium.value,
         high: high.value,
         zynkBps: zynkBps.value,
+        nreBps: nreBps.value,
         bankingFeeUsd: bankingFeeUsd.value,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, small.value, medium.value, high.value, zynkBps.value, bankingFeeUsd.value]);
+  }, [loading, small.value, medium.value, high.value, zynkBps.value, nreBps.value, bankingFeeUsd.value]);
 
   async function onSubmit(data: DeveloperFeeFormValues) {
     setSaving(true);
@@ -165,12 +182,14 @@ export function DeveloperFeeForm() {
       await api.updateSetting("RATE_FLAG_MULTIPLIER_MEDIUM", data.medium);
       await api.updateSetting("RATE_FLAG_MULTIPLIER_HIGH", data.high);
       await api.updateSetting("ZYNK_FEE_BPS", data.zynkBps);
+      await api.updateSetting("NRE_FEE_BPS", data.nreBps);
       await api.updateSetting("BANKING_FEE_USD", data.bankingFeeUsd);
       const now = new Date().toISOString();
       small.setLastUpdated(now);
       medium.setLastUpdated(now);
       high.setLastUpdated(now);
       zynkBps.setLastUpdated(now);
+      nreBps.setLastUpdated(now);
       bankingFeeUsd.setLastUpdated(now);
       toast.success("Developer fee settings saved");
     } catch (err) {
@@ -225,6 +244,31 @@ export function DeveloperFeeForm() {
                   <FormDescription>
                     Zynk fee component, in basis points (20 = 0.20%). Part of the
                     base fee: amount × bps / 10000.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="nreBps"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>NRE Fee (bps)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="1"
+                      placeholder="10"
+                      disabled={!enabled.value}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Extra DattaRemit fee component, in basis points (10 = 0.10%),
+                    added to the developer fee <strong>only</strong> when a user
+                    sends to their own NRE bank account. 0 disables it.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
