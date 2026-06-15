@@ -58,7 +58,14 @@ async function adminFetch<T>(
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      console.error("API error", res.status, body);
+      // Never log the parsed error body in production: admin error responses can
+      // carry PII / unmasked bank details. Dev keeps full diagnostics; prod logs
+      // only the status code. (Security finding #2)
+      if (process.env.NODE_ENV !== "production") {
+        console.error("API error", res.status, body);
+      } else {
+        console.error("API error", res.status);
+      }
       throw new Error(extractErrorMessage(body));
     }
 
