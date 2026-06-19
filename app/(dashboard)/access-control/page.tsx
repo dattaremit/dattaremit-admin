@@ -31,7 +31,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFilteredTable } from "@/hooks/use-filtered-table";
 import { PagePagination } from "@/components/page-pagination";
-import { TableSkeleton } from "@/components/table-skeleton";
+import { TableSkeleton } from "@/components/table/table-skeleton";
 import { ErrorState } from "@/components/error-state";
 import { AddAccessControlEmailDialog } from "@/components/access-control/add-access-control-email-dialog";
 import { RemoveAccessControlEmailDialog } from "@/components/access-control/remove-access-control-email-dialog";

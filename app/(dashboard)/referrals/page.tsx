@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ErrorState } from "@/components/error-state";
 import { PagePagination } from "@/components/page-pagination";
-import { TableSkeleton } from "@/components/table-skeleton";
+import { TableSkeleton } from "@/components/table/table-skeleton";
 import { SearchInput } from "@/components/search-input";
 import {
   Card,

@@ -29,7 +29,7 @@ import {
 import { api, type RecipientSummary } from "@/lib/api";
 import { useFilteredTable } from "@/hooks/use-filtered-table";
 import { PagePagination } from "@/components/page-pagination";
-import { TableSkeleton } from "@/components/table-skeleton";
+import { TableSkeleton } from "@/components/table/table-skeleton";
 import { ErrorState } from "@/components/error-state";
 
 const KYC_VARIANT: Record<string, "default" | "secondary" | "destructive"> = {

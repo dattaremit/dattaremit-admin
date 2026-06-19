@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { STATUS_BADGE_VARIANT } from "@/lib/constants";
 import { formatDate, formatActivityType } from "@/lib/utils";
-import { ActivityMetadataDialog } from "@/components/activity-metadata-dialog";
+import { ActivityMetadataDialog } from "@/components/activities/activity-metadata-dialog";
 
 interface Activity {
   id: string;

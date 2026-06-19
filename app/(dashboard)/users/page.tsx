@@ -12,12 +12,12 @@ import { api, type User } from "@/lib/api";
 import { useFilteredTable } from "@/hooks/use-filtered-table";
 import { useCrudDialog } from "@/hooks/use-crud-dialog";
 import { PagePagination } from "@/components/page-pagination";
-import { TableSkeleton } from "@/components/table-skeleton";
+import { TableSkeleton } from "@/components/table/table-skeleton";
 import { ErrorState } from "@/components/error-state";
-import { EditUserDialog } from "@/components/edit-user-dialog";
-import { DeleteUserDialog } from "@/components/delete-user-dialog";
-import { ChangeRoleDialog } from "@/components/change-role-dialog";
-import { AddUserDialog } from "@/components/add-user-dialog";
+import { EditUserDialog } from "@/components/users/edit-user-dialog";
+import { DeleteUserDialog } from "@/components/users/delete-user-dialog";
+import { ChangeRoleDialog } from "@/components/users/change-role-dialog";
+import { AddUserDialog } from "@/components/users/add-user-dialog";
 import { UsersTable } from "@/components/users/users-table";
 import { UsersFilters } from "@/components/users/users-filters";
 

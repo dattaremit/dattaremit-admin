@@ -2,7 +2,7 @@
 
 import { useUser } from "@clerk/nextjs";
 import { Sparkles } from "lucide-react";
-import { DashboardSkeleton } from "@/components/dashboard-skeleton";
+import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton";
 import { ErrorState } from "@/components/error-state";
 import { DashboardStatsCards } from "@/components/dashboard/dashboard-stats-cards";
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";

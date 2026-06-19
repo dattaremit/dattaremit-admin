@@ -11,7 +11,7 @@ import {
 import { api, type TransactionListItem, type TransactionFilters } from "@/lib/api";
 import { useFilteredTable } from "@/hooks/use-filtered-table";
 import { PagePagination } from "@/components/page-pagination";
-import { TableSkeleton } from "@/components/table-skeleton";
+import { TableSkeleton } from "@/components/table/table-skeleton";
 import { ErrorState } from "@/components/error-state";
 import { TransactionsTable } from "@/components/transactions/transactions-table";
 import { TransactionsFilters } from "@/components/transactions/transactions-filters";
