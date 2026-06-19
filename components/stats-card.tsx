@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useCountUp } from "@/hooks/use-count-up";
 
 type Accent = "brand" | "success" | "warning" | "neutral";
 
@@ -45,6 +48,7 @@ export function StatsCard({
   description,
   accent = "neutral",
   trend,
+  index,
   children,
 }: {
   title: string;
@@ -53,16 +57,20 @@ export function StatsCard({
   description: string;
   accent?: Accent;
   trend?: { value: string; positive?: boolean };
+  /** When provided, the card fades in with a staggered delay (50ms per index). */
+  index?: number;
   children?: React.ReactNode;
 }) {
   const styles = accentStyles[accent];
 
   return (
     <Card
+      style={index !== undefined ? { animationDelay: `${index * 50}ms` } : undefined}
       className={cn(
         "group relative overflow-hidden transition-all duration-300",
         "hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-12px_oklch(from_var(--foreground)_l_c_h/0.18)]",
         "before:pointer-events-none before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-500 group-hover:before:opacity-100",
+        index !== undefined && "animate-fade-up",
         styles.glow
       )}
     >
@@ -85,7 +93,7 @@ export function StatsCard({
       <CardContent className="space-y-1.5">
         <div className="flex items-baseline gap-2">
           <div className="text-3xl font-semibold tracking-tight tabular">
-            {typeof value === "number" ? value.toLocaleString() : value}
+            {typeof value === "number" ? <CountUpValue value={value} /> : value}
           </div>
           {trend && (
             <span
@@ -105,4 +113,14 @@ export function StatsCard({
       </CardContent>
     </Card>
   );
+}
+
+/**
+ * Renders a number that animates from its previous value up to `value`.
+ * Split into its own component so the count-up hook is only invoked for
+ * numeric stats (hooks can't be called conditionally).
+ */
+function CountUpValue({ value }: { value: number }) {
+  const animated = useCountUp(value);
+  return <>{Math.round(animated).toLocaleString()}</>;
 }

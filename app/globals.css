@@ -304,11 +304,34 @@
   color: transparent;
 }
 
-/* Decorative ambient blob for hero/header areas */
+/* Decorative ambient blob for hero/header areas — slowly drifts to feel alive */
 @utility ambient-blob {
   position: absolute;
   pointer-events: none;
   border-radius: 9999px;
   filter: blur(56px);
   opacity: 0.55;
+  will-change: transform, opacity;
+  animation: aurora-drift 18s ease-in-out infinite;
+}
+
+@utility ambient-blob-slow {
+  animation: aurora-drift-slow 24s ease-in-out infinite;
+}
+
+/* Respect users who prefer reduced motion: neutralize all decorative motion
+   while keeping content fully visible (no lingering opacity:0 states). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .ambient-blob {
+    animation: none !important;
+  }
 }

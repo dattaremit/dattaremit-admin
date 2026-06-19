@@ -58,7 +58,14 @@ async function adminFetch<T>(
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      console.error("API error", res.status, body);
+      // Only log the raw response body in development. Admin endpoints can echo
+      // PII (emails, full bank account numbers) inside error payloads, which we
+      // never want surfaced in a production browser console / log pipeline.
+      if (process.env.NODE_ENV === "development") {
+        console.error("API error", res.status, body);
+      } else {
+        console.error("API error", res.status);
+      }
       throw new Error(extractErrorMessage(body));
     }
 
@@ -513,8 +520,23 @@ export interface UpdateUserPayload {
   rateFlag?: RateFlag;
 }
 
+// The dashboard route fires `/admin/stats` twice on load — once from the shell's
+// admin-authorization check and once from the dashboard data hook — at the same
+// moment. Collapse concurrent in-flight calls into a single request so the page
+// load makes one round trip instead of two. No TTL: once the request settles the
+// next call fetches fresh data, so refetch/retry semantics are unchanged.
+let statsInFlight: Promise<ApiResponse<DashboardStats>> | null = null;
+
 export const api = {
-  getDashboardStats: () => adminFetch<ApiResponse<DashboardStats>>("/stats"),
+  getDashboardStats: () => {
+    if (statsInFlight) return statsInFlight;
+    statsInFlight = adminFetch<ApiResponse<DashboardStats>>("/stats").finally(
+      () => {
+        statsInFlight = null;
+      },
+    );
+    return statsInFlight;
+  },
 
   getUsers: (page = 1, limit = 20, search?: string, status?: string) => {
     const params = new URLSearchParams({

@@ -55,16 +55,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div
-        className="animate-fade-up"
-        style={{ animationDelay: "60ms" }}
-      >
-        <DashboardStatsCards stats={data.stats} />
-      </div>
+      <DashboardStatsCards stats={data.stats} />
 
       <div
         className="animate-fade-up"
-        style={{ animationDelay: "140ms" }}
+        style={{ animationDelay: "260ms" }}
       >
         <DashboardTabs data={data} />
       </div>

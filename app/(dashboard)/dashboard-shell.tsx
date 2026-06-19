@@ -194,7 +194,7 @@ export default function DashboardShell({
               }}
             />
             <div
-              className="ambient-blob"
+              className="ambient-blob ambient-blob-slow"
               style={{
                 top: "-160px",
                 right: "-120px",

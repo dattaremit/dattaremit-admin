@@ -17,6 +17,7 @@ export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
         icon={Users}
         accent="brand"
         description="All registered users"
+        index={0}
       />
       <StatsCard
         title="Active Users"
@@ -24,6 +25,7 @@ export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
         icon={UserCheck}
         accent="success"
         description="Verified & active"
+        index={1}
       />
       <StatsCard
         title="Pending KYC"
@@ -31,6 +33,7 @@ export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
         icon={Clock}
         accent="warning"
         description="Awaiting verification"
+        index={2}
       />
       <StatsCard
         title="Total Activities"
@@ -38,6 +41,7 @@ export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
         icon={Activity}
         accent="neutral"
         description="All activity records"
+        index={3}
       />
     </div>
   );
