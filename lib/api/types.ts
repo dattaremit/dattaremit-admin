@@ -153,6 +153,68 @@ export interface MarketingStats {
   totalPromoterReferrals: number;
 }
 
+// Referral bonus ledger (GET /admin/referral-bonuses). `amount`/`amountUsd`/
+// `outputAmountInr` arrive as decimal strings from the backend.
+export type ReferralBonusStatus =
+  | "PENDING"
+  | "INITIATED"
+  | "CLAIMED"
+  | "FAILED";
+
+export type ReferralBonusPayoutStatus =
+  | "PENDING"
+  | "INITIATED"
+  | "COMPLETED"
+  | "FAILED"
+  | "NEEDS_MANUAL_REVIEW";
+
+export interface ReferralBonusPayout {
+  id: string;
+  status: ReferralBonusPayoutStatus;
+  amountUsd: string;
+  outputAmountInr: string | null;
+  retryCount: number;
+  failureReason: string | null;
+  merchantPayoutId: string;
+  crediblePayoutId: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReferralBonus {
+  id: string;
+  beneficiaryRole: "REFERRER" | "REFEREE";
+  referrerId: string;
+  refereeId: string;
+  qualifyingTransactionId: string;
+  amount: string;
+  currency: string;
+  status: ReferralBonusStatus;
+  payoutTransactionId: string | null;
+  claimedAt: string | null;
+  failedAt: string | null;
+  payout: ReferralBonusPayout | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReferralBonusListResponse {
+  items: ReferralBonus[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ReferralBonusFilters {
+  status?: string;
+  [key: string]: string | undefined;
+}
+
+export interface RetryPayoutResult {
+  bonusStatus: ReferralBonusStatus;
+  payoutStatus: ReferralBonusPayoutStatus | null;
+}
+
 export type SettingsKey =
   | "WEEKLY_TRANSFER_LIMIT_USD"
   | "WAITLIST_ENABLED"
@@ -169,7 +231,11 @@ export type SettingsKey =
   | "RATE_FLAG_MULTIPLIER_SMALL"
   | "RATE_FLAG_MULTIPLIER_MEDIUM"
   | "RATE_FLAG_MULTIPLIER_HIGH"
-  | "NRE_SELF_TRANSFER_FEE_RATE";
+  | "NRE_SELF_TRANSFER_FEE_RATE"
+  | "REFERRAL_BONUS_ENABLED"
+  | "REFERRAL_BONUS_MIN_TRANSFER_USD"
+  | "REFERRAL_REFERRER_BONUS_USD"
+  | "REFERRAL_REFEREE_BONUS_USD";
 
 export interface AppSettings {
   [key: string]: {

@@ -20,7 +20,10 @@ import type {
   PromoterPaginatedResponse,
   RecipientDetail,
   RecipientSummary,
+  ReferralBonusFilters,
+  ReferralBonusListResponse,
   ReferralStats,
+  RetryPayoutResult,
   SettingsKey,
   StatusCount,
   TransactionDetail,
@@ -174,6 +177,28 @@ export const api = {
     if (search) params.set("search", search);
     return adminFetch<ApiResponse<ReferralStats>>(`/referral-stats?${params}`);
   },
+
+  // Referral bonuses
+  getReferralBonuses: (
+    page = 1,
+    limit = 20,
+    filters: ReferralBonusFilters = {},
+  ) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (filters.status) params.set("status", filters.status);
+    return adminFetch<ApiResponse<ReferralBonusListResponse>>(
+      `/referral-bonuses?${params}`,
+    );
+  },
+
+  retryReferralBonusPayout: (id: string) =>
+    adminFetch<ApiResponse<RetryPayoutResult>>(
+      `/referral-bonuses/${id}/retry-payout`,
+      { method: "POST" },
+    ),
 
   createUser: (data: CreateUserPayload) =>
     adminFetch<ApiResponse<User>>("/users", {
