@@ -48,6 +48,28 @@ export const ACTIVITY_TYPES = [
   "ACCOUNT_DEACTIVATED",
 ] as const;
 
+export const REFERRAL_BONUS_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  PENDING: "outline",
+  INITIATED: "secondary",
+  CLAIMED: "default",
+  FAILED: "destructive",
+};
+
+export const REFERRAL_BONUS_PAYOUT_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  PENDING: "outline",
+  INITIATED: "secondary",
+  COMPLETED: "default",
+  FAILED: "destructive",
+  NEEDS_MANUAL_REVIEW: "destructive",
+};
+
+export const REFERRAL_BONUS_STATUSES = [
+  "PENDING",
+  "INITIATED",
+  "CLAIMED",
+  "FAILED",
+] as const;
+
 export const ROLE_BADGE_VARIANT: Record<string, BadgeVariant> = {
   ADMIN: "destructive",
   USER: "outline",

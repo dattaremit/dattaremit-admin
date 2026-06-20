@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useApiFetch } from "@/hooks/use-api-fetch";
 import { useFilteredTable } from "@/hooks/use-filtered-table";
 import { api, type DashboardStats, type ReferralFunnel } from "@/lib/api";
@@ -22,6 +23,7 @@ import {
   ReferrersTable,
   type Referrer,
 } from "@/components/referrals/referrers-table";
+import { BonusPayoutsPanel } from "@/components/referrals/bonus-payouts-panel";
 
 interface StatsData {
   totalReferrals: number;
@@ -101,50 +103,63 @@ export default function ReferralsPage() {
         </p>
       </div>
 
-      <ReferralStatsCards
-        totalReferrals={totalReferrals}
-        referralRate={referralRate}
-        topReferrerCount={total}
-      />
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="bonus-payouts">Bonus Payouts</TabsTrigger>
+        </TabsList>
 
-      <div className="space-y-3">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight">Referred user funnel</h2>
-          <p className="text-sm text-muted-foreground">
-            How far referred users progress — aggregate counts only, no individual data
-          </p>
-        </div>
-        <ReferralFunnelCards funnel={funnel} />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Referrer Leaderboard</CardTitle>
-          <CardDescription>Detailed breakdown of top referrers</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search by name, email, or referral code..."
+        <TabsContent value="overview" className="space-y-6">
+          <ReferralStatsCards
+            totalReferrals={totalReferrals}
+            referralRate={referralRate}
+            topReferrerCount={total}
           />
 
-          {tableError ? (
-            <ErrorState message={tableError} onRetry={tableRefetch} />
-          ) : tableLoading ? (
-            <TableSkeleton />
-          ) : (
-            <ReferrersTable
-              referrers={topReferrers}
-              page={page}
-              totalReferrals={totalReferrals}
-              searchActive={!!search}
-            />
-          )}
+          <div className="space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Referred user funnel</h2>
+              <p className="text-sm text-muted-foreground">
+                How far referred users progress — aggregate counts only, no individual data
+              </p>
+            </div>
+            <ReferralFunnelCards funnel={funnel} />
+          </div>
 
-          <PagePagination page={page} totalPages={totalPages} onPageChange={setPage} />
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Referrer Leaderboard</CardTitle>
+              <CardDescription>Detailed breakdown of top referrers</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <SearchInput
+                value={search}
+                onChange={setSearch}
+                placeholder="Search by name, email, or referral code..."
+              />
+
+              {tableError ? (
+                <ErrorState message={tableError} onRetry={tableRefetch} />
+              ) : tableLoading ? (
+                <TableSkeleton />
+              ) : (
+                <ReferrersTable
+                  referrers={topReferrers}
+                  page={page}
+                  totalReferrals={totalReferrals}
+                  searchActive={!!search}
+                />
+              )}
+
+              <PagePagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="bonus-payouts" className="space-y-6">
+          <BonusPayoutsPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
