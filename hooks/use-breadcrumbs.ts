@@ -13,6 +13,7 @@ const LABELS: Record<string, string> = {
   activities: "Activities",
   referrals: "Referrals",
   settings: "Settings",
+  webhooks: "Webhooks",
 };
 
 export function useBreadcrumbs(): Breadcrumb[] {

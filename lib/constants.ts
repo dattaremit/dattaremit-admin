@@ -31,6 +31,24 @@ export const TRANSACTION_PAYOUT_PROVIDERS = [
   "ZYNK_TO_DCX",
 ] as const;
 
+export const WEBHOOK_STATUS_BADGE_VARIANT: Record<string, BadgeVariant> = {
+  SUCCESS: "default",
+  PROCESSING: "secondary",
+  PENDING: "outline",
+  IGNORED: "outline",
+  FAILED: "destructive",
+};
+
+export const WEBHOOK_STATUSES = [
+  "PENDING",
+  "PROCESSING",
+  "SUCCESS",
+  "FAILED",
+  "IGNORED",
+] as const;
+
+export const WEBHOOK_PROVIDERS = ["ZYNK", "CLERK", "CREDIBLE", "DCX"] as const;
+
 export const ACTIVITY_TYPES = [
   "DEPOSIT",
   "WITHDRAWAL",

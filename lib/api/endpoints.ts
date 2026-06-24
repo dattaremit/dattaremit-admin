@@ -32,6 +32,9 @@ import type {
   TypeCount,
   UpdateUserPayload,
   User,
+  WebhookEventDetail,
+  WebhookEventListItem,
+  WebhookFilters,
 } from "./types";
 
 // The dashboard route fires `/admin/stats` twice on load — once from the shell's
@@ -102,6 +105,24 @@ export const api = {
 
   getTransactionById: (id: string) =>
     adminFetch<ApiResponse<TransactionDetail>>(`/transactions/${id}`),
+
+  getWebhookEvents: (page = 1, limit = 20, filters: WebhookFilters = {}) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (filters.search) params.set("search", filters.search);
+    if (filters.provider) params.set("provider", filters.provider);
+    if (filters.status) params.set("status", filters.status);
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+    return adminFetch<ApiResponse<PaginatedResponse<WebhookEventListItem>>>(
+      `/webhooks?${params}`,
+    );
+  },
+
+  getWebhookEventById: (id: string) =>
+    adminFetch<ApiResponse<WebhookEventDetail>>(`/webhooks/${id}`),
 
   getActivities: (page = 1, limit = 20, filters: ActivityFilters = {}) => {
     const params = new URLSearchParams({

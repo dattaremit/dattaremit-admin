@@ -269,6 +269,7 @@ export interface PaginatedResponse<T> {
   activities?: T[];
   recipients?: T[];
   transactions?: T[];
+  webhookEvents?: T[];
   total: number;
   page: number;
   limit: number;
@@ -424,6 +425,52 @@ export interface TransactionFilters {
   search?: string;
   status?: string;
   payoutProvider?: string;
+  from?: string;
+  to?: string;
+  [key: string]: string | undefined;
+}
+
+export type WebhookProvider = "ZYNK" | "CLERK" | "CREDIBLE" | "DCX";
+
+export type WebhookEventStatus =
+  | "PENDING"
+  | "PROCESSING"
+  | "SUCCESS"
+  | "FAILED"
+  | "IGNORED";
+
+// Row shape for the webhook-events table (no raw payload — loaded on demand).
+export interface WebhookEventListItem {
+  id: string;
+  provider: WebhookProvider;
+  idempotencyKey: string;
+  eventCategory: string | null;
+  eventType: string | null;
+  eventStatus: string | null;
+  status: WebhookEventStatus;
+  attempts: number;
+  lastError: string | null;
+  userId: string | null;
+  recipientId: string | null;
+  transactionId: string | null;
+  firstReceivedAt: string;
+  lastAttemptAt: string | null;
+  processedAt: string | null;
+  created_at: string;
+}
+
+// Full detail for the inspector dialog, including the raw payload.
+export interface WebhookEventDetail extends WebhookEventListItem {
+  signatureHeader: string | null;
+  zynkEntityId: string | null;
+  rawPayload: unknown;
+  updated_at: string;
+}
+
+export interface WebhookFilters {
+  search?: string;
+  provider?: string;
+  status?: string;
   from?: string;
   to?: string;
   [key: string]: string | undefined;

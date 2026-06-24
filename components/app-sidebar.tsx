@@ -15,6 +15,7 @@ import {
   Megaphone,
   ShieldCheck,
   ArrowLeftRight,
+  Webhook,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +52,10 @@ const navSections: {
     items: [
       { title: "Transactions", href: "/transactions", icon: ArrowLeftRight },
     ],
+  },
+  {
+    label: "System",
+    items: [{ title: "Webhooks", href: "/webhooks", icon: Webhook }],
   },
   {
     label: "Growth",
