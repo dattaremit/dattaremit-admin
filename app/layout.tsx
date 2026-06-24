@@ -30,7 +30,7 @@ export default async function RootLayout({
   const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
-    <ClerkProvider nonce={nonce}>
+    <ClerkProvider dynamic nonce={nonce}>
       <html lang="en">
         <body
           className={`${poppins.variable} ${geistMono.variable} antialiased`}
