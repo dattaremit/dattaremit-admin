@@ -29,6 +29,8 @@ import type {
   TransactionDetail,
   TransactionFilters,
   TransactionListItem,
+  TransferRequest,
+  TransferRequestFilters,
   TypeCount,
   UpdateUserPayload,
   User,
@@ -251,6 +253,33 @@ export const api = {
     adminFetch<ApiResponse<User>>(`/users/${id}/instant-transfer`, {
       method: "PATCH",
       body: JSON.stringify({ enabled }),
+    }),
+
+  // Sets (replaces) the user's prepaid balance to the given USD amount.
+  setUserBalance: (id: string, balance: number) =>
+    adminFetch<ApiResponse<User>>(`/users/${id}/balance`, {
+      method: "PATCH",
+      body: JSON.stringify({ balance }),
+    }),
+
+  // Balance-send requests filed by users; fulfilled manually by an admin.
+  getTransferRequests: (page = 1, limit = 20, filters: TransferRequestFilters = {}) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (filters.search) params.set("search", filters.search);
+    if (filters.status) params.set("status", filters.status);
+    return adminFetch<ApiResponse<PaginatedResponse<TransferRequest>>>(
+      `/transfer-requests?${params}`,
+    );
+  },
+
+  updateTransferRequestStatus: (
+    id: string,
+    status: "COMPLETED" | "REJECTED",
+    note?: string,
+  ) =>
+    adminFetch<ApiResponse<TransferRequest>>(`/transfer-requests/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, note }),
     }),
 
   // Marketing

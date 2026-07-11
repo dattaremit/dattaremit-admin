@@ -88,6 +88,14 @@ export const REFERRAL_BONUS_STATUSES = [
   "FAILED",
 ] as const;
 
+export const TRANSFER_REQUEST_STATUS_VARIANT: Record<string, BadgeVariant> = {
+  PENDING: "secondary",
+  COMPLETED: "default",
+  REJECTED: "destructive",
+};
+
+export const TRANSFER_REQUEST_STATUSES = ["PENDING", "COMPLETED", "REJECTED"] as const;
+
 export const ROLE_BADGE_VARIANT: Record<string, BadgeVariant> = {
   ADMIN: "destructive",
   USER: "outline",

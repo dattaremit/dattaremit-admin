@@ -15,6 +15,7 @@ import {
   Megaphone,
   ShieldCheck,
   ArrowLeftRight,
+  Send,
   Webhook,
 } from "lucide-react";
 import {
@@ -51,6 +52,7 @@ const navSections: {
     label: "Money",
     items: [
       { title: "Transactions", href: "/transactions", icon: ArrowLeftRight },
+      { title: "Transfer Requests", href: "/transfer-requests", icon: Send },
     ],
   },
   {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Shield, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Shield, Pencil, Trash2, Wallet } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -20,6 +20,7 @@ import { useApiFetch } from "@/hooks/use-api-fetch";
 import { EditUserDialog } from "@/components/users/edit-user-dialog";
 import { DeleteUserDialog } from "@/components/users/delete-user-dialog";
 import { ChangeRoleDialog } from "@/components/users/change-role-dialog";
+import { SetBalanceDialog } from "@/components/users/set-balance-dialog";
 import { UserProfile } from "@/components/users/user-profile";
 import { UserAddresses } from "@/components/users/user-addresses";
 import { UserBankDetails } from "@/components/users/user-bank-details";
@@ -36,6 +37,7 @@ export default function UserDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [changeRoleOpen, setChangeRoleOpen] = useState(false);
+  const [setBalanceOpen, setSetBalanceOpen] = useState(false);
   const [instantTransferLoading, setInstantTransferLoading] = useState(false);
 
   async function handleInstantTransferToggle(checked: boolean) {
@@ -131,6 +133,10 @@ export default function UserDetailPage() {
           <Shield className="mr-2 h-4 w-4" />
           Change Role
         </Button>
+        <Button variant="outline" size="sm" onClick={() => setSetBalanceOpen(true)}>
+          <Wallet className="mr-2 h-4 w-4" />
+          Set Balance (${Number(user.balance ?? 0).toFixed(2)})
+        </Button>
         <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
@@ -195,6 +201,13 @@ export default function UserDetailPage() {
         user={user}
         open={changeRoleOpen}
         onOpenChange={setChangeRoleOpen}
+        onSuccess={refetch}
+      />
+
+      <SetBalanceDialog
+        user={user}
+        open={setBalanceOpen}
+        onOpenChange={setSetBalanceOpen}
         onSuccess={refetch}
       />
     </div>

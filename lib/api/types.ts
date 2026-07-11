@@ -38,6 +38,9 @@ export interface User {
   zynkDepositAccountId: string | null;
   indianKycStatus: "NONE" | "PENDING" | "APPROVED" | "REJECTED" | "FAILED";
   instantTransfer: boolean;
+  // Admin-managed prepaid balance (USD). Arrives as a decimal string from the
+  // backend (Prisma Decimal); wrap in Number() before doing math or formatting.
+  balance: string;
   // Admin-only fee tier. The user-facing API never returns this field;
   // only admin endpoints surface it.
   rateFlag: "ZERO" | "SMALL" | "MEDIUM" | "HIGH";
@@ -269,10 +272,51 @@ export interface PaginatedResponse<T> {
   activities?: T[];
   recipients?: T[];
   transactions?: T[];
+  transferRequests?: T[];
   webhookEvents?: T[];
   total: number;
   page: number;
   limit: number;
+}
+
+// ── Transfer Requests (balance sends) ──
+// A balance-send request a user filed. Resolved `destination` carries the FULL
+// (decrypted) bank details so an admin can key the manual payout; it is null if
+// the referenced bank was since deleted.
+export interface TransferRequestDestinationDetails {
+  kind: "BANK" | "NRE";
+  bankName: string | null;
+  bankAccountName?: string | null;
+  accountHolderName?: string | null;
+  bankAccountNumber?: string | null;
+  accountNumber?: string | null;
+  bankIfsc?: string | null;
+  ifscCode?: string | null;
+  swiftCode?: string | null;
+  bankAccountType?: string | null;
+  accountType?: string | null;
+}
+
+export interface TransferRequest {
+  id: string;
+  userId: string;
+  userName: string | null;
+  amountUsd: number;
+  exchangeRate: number;
+  endAmountInr: number;
+  destinationType: "RECIPIENT" | "SELF_BANK" | "SELF_NRE";
+  destinationLabel: string;
+  destination: TransferRequestDestinationDetails | null;
+  status: "PENDING" | "COMPLETED" | "REJECTED";
+  note: string | null;
+  processedAt: string | null;
+  created_at: string;
+}
+
+export interface TransferRequestFilters {
+  search?: string;
+  status?: string;
+  [key: string]: string | undefined;
 }
 
 export interface BankDetailsPublic {
