@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Shield, Pencil, Trash2, Wallet } from "lucide-react";
+import { ArrowLeft, Shield, Pencil, Trash2, Wallet, Landmark } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,6 +21,7 @@ import { EditUserDialog } from "@/components/users/edit-user-dialog";
 import { DeleteUserDialog } from "@/components/users/delete-user-dialog";
 import { ChangeRoleDialog } from "@/components/users/change-role-dialog";
 import { SetBalanceDialog } from "@/components/users/set-balance-dialog";
+import { SetBankAccountDialog } from "@/components/users/set-bank-account-dialog";
 import { UserProfile } from "@/components/users/user-profile";
 import { UserAddresses } from "@/components/users/user-addresses";
 import { UserBankDetails } from "@/components/users/user-bank-details";
@@ -38,6 +39,7 @@ export default function UserDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [changeRoleOpen, setChangeRoleOpen] = useState(false);
   const [setBalanceOpen, setSetBalanceOpen] = useState(false);
+  const [setBankAccountOpen, setSetBankAccountOpen] = useState(false);
   const [instantTransferLoading, setInstantTransferLoading] = useState(false);
 
   async function handleInstantTransferToggle(checked: boolean) {
@@ -133,7 +135,21 @@ export default function UserDetailPage() {
           <Shield className="mr-2 h-4 w-4" />
           Change Role
         </Button>
-        <Button variant="outline" size="sm" onClick={() => setSetBalanceOpen(true)}>
+        <Button variant="outline" size="sm" onClick={() => setSetBankAccountOpen(true)}>
+          <Landmark className="mr-2 h-4 w-4" />
+          {user.usdBankAccount ? "Bank Account ✓" : "Assign Bank Account"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!user.usdBankAccount}
+          title={
+            user.usdBankAccount
+              ? undefined
+              : "Assign a bank account before crediting a balance"
+          }
+          onClick={() => setSetBalanceOpen(true)}
+        >
           <Wallet className="mr-2 h-4 w-4" />
           Set Balance (${Number(user.balance ?? 0).toFixed(2)})
         </Button>
@@ -208,6 +224,13 @@ export default function UserDetailPage() {
         user={user}
         open={setBalanceOpen}
         onOpenChange={setSetBalanceOpen}
+        onSuccess={refetch}
+      />
+
+      <SetBankAccountDialog
+        user={user}
+        open={setBankAccountOpen}
+        onOpenChange={setSetBankAccountOpen}
         onSuccess={refetch}
       />
     </div>

@@ -18,6 +18,15 @@ export interface DashboardStats {
   recentActivities: Activity[];
 }
 
+// Admin-assigned USD receiving bank account. Fixed nested shape the admin keys
+// in on the user-detail page; surfaced to the user on their balance page.
+export interface UsdBankAccount {
+  accountHolder: { name: string };
+  bank: { name: string; country: string; bic: string; abaRoutingNumber: string };
+  account: { accountNumber: string };
+  address: { line1: string; city: string; state: string; postalCode: string; country: string };
+}
+
 export interface User {
   id: string;
   firstName: string;
@@ -41,6 +50,9 @@ export interface User {
   // Admin-managed prepaid balance (USD). Arrives as a decimal string from the
   // backend (Prisma Decimal); wrap in Number() before doing math or formatting.
   balance: string;
+  // Admin-assigned USD receiving bank account, shown to the user on their
+  // balance page. Null/absent until an admin assigns one.
+  usdBankAccount?: UsdBankAccount | null;
   // Admin-only fee tier. The user-facing API never returns this field;
   // only admin endpoints surface it.
   rateFlag: "ZERO" | "SMALL" | "MEDIUM" | "HIGH";

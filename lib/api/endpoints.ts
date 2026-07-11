@@ -33,6 +33,7 @@ import type {
   TransferRequestFilters,
   TypeCount,
   UpdateUserPayload,
+  UsdBankAccount,
   User,
   WebhookEventDetail,
   WebhookEventListItem,
@@ -260,6 +261,14 @@ export const api = {
     adminFetch<ApiResponse<User>>(`/users/${id}/balance`, {
       method: "PATCH",
       body: JSON.stringify({ balance }),
+    }),
+
+  // Assigns (replaces) the user's USD receiving bank account — shown to the
+  // user on their balance page. Assigned before crediting a balance.
+  setUsdBankAccount: (id: string, usdBankAccount: UsdBankAccount) =>
+    adminFetch<ApiResponse<User>>(`/users/${id}/usd-bank-account`, {
+      method: "PATCH",
+      body: JSON.stringify(usdBankAccount),
     }),
 
   // Balance-send requests filed by users; fulfilled manually by an admin.
