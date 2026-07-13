@@ -20,6 +20,7 @@ import { DeveloperFeeForm } from "@/components/settings/developer-fee-form";
 import { ReferralBonusForm } from "@/components/settings/referral-bonus-form";
 import { AccessControlSettingsForm } from "@/components/settings/access-control-settings-form";
 import { RecipientKycSettingsForm } from "@/components/settings/recipient-kyc-settings-form";
+import { MaintenanceSettingsForm } from "@/components/settings/maintenance-settings-form";
 
 export default function SettingsPage() {
   return (
@@ -39,6 +40,7 @@ export default function SettingsPage() {
           <TabsTrigger value="referral-bonus">Referral Bonus</TabsTrigger>
           <TabsTrigger value="recipients">Recipients</TabsTrigger>
           <TabsTrigger value="access-control">Access Control</TabsTrigger>
+          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
@@ -66,6 +68,10 @@ export default function SettingsPage() {
 
         <TabsContent value="access-control" className="space-y-6">
           <AccessControlSettingsForm />
+        </TabsContent>
+
+        <TabsContent value="maintenance" className="space-y-6">
+          <MaintenanceSettingsForm />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
