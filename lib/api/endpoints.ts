@@ -380,12 +380,4 @@ export const api = {
       }),
     }),
 
-  setMaintenanceModeEnabled: (enabled: boolean) =>
-    adminFetch<ApiResponse<unknown>>("/settings", {
-      method: "PUT",
-      body: JSON.stringify({
-        key: "MAINTENANCE_MODE_ENABLED",
-        value: enabled ? "true" : "false",
-      }),
-    }),
 };

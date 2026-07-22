@@ -233,7 +233,6 @@ export interface RetryPayoutResult {
 export type SettingsKey =
   | "WEEKLY_TRANSFER_LIMIT_USD"
   | "WAITLIST_ENABLED"
-  | "MAINTENANCE_MODE_ENABLED"
   | "RECIPIENT_KYC_ENABLED"
   | "NOTIFY_EMAIL_ENABLED"
   | "NOTIFY_KYC_ALERTS"
